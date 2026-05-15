@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.volleyflow.auth.dto.AuthResponse;
-import pl.volleyflow.auth.service.AuthServiceImpl;
+import pl.volleyflow.auth.service.AuthService;
 import pl.volleyflow.user.model.UserRegisterRequest;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/internal/auth")
@@ -18,13 +20,19 @@ import pl.volleyflow.user.model.UserRegisterRequest;
 @Log4j2
 public class AuthController {
 
-    private final AuthServiceImpl authServiceImpl;
+    private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody UserRegisterRequest request) {
+    public ResponseEntity<AuthResponse> register(@RequestBody @Valid UserRegisterRequest request) {
         log.info("Registration request for email: {}", request.email());
-        AuthResponse response = authServiceImpl.register(request);
+        AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("login")
+    public ResponseEntity<AuthResponse> login(@RequestBody @Valid UserLoginRequest userLoginRequest) {
+        log.info("Login request for email: {}", userLoginRequest.email());
+        return ResponseEntity.ok(authService.login(userLoginRequest));
     }
 
 }

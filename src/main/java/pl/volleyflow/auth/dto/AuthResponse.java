@@ -1,12 +1,11 @@
 package pl.volleyflow.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 
-import java.util.UUID;
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
 public record AuthResponse(
-        UUID externalId,
-        String email,
+        String token,
         String message) {
 }

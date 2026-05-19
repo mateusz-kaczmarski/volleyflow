@@ -32,7 +32,6 @@ public class AuthServiceImpl implements AuthService {
 
         //todo JWT service
         return AuthResponse.builder()
-                .token("")
                 .build();
     }
 
@@ -47,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
                 && userAccount.isEmailVerified()
                 && UserAccountStatus.ACTIVE.equals(userAccount.getStatus())) {
             //todo JWT service
-            return new AuthResponse("", "Login successfully");
+            return new AuthResponse(null, "Login successfully");
         }
         throw new InvalidCredentialsException("Invalid credentials");
     }

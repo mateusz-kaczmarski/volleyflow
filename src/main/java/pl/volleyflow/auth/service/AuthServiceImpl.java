@@ -26,7 +26,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse register(UserRegisterRequest request) {
         UserAccountRequest userRequest = getUserAccountRequest(request);
 
-        UserAccountDto userDto = userAccountService.createUser(userRequest);
+        UserAccountDto userDto = userAccountService.create(userRequest);
 
         log.info("User registered: {}", userDto.email());
 

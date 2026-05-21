@@ -2,6 +2,7 @@ package pl.volleyflow.club.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -25,7 +26,7 @@ public class Club {
     @Column(nullable = false, unique = true, length = 120)
     private String name;
 
-    @Column(length = 20)
+    @Column(length = 255)
     private String avatar;
 
     @Column(length = 1024)
@@ -52,4 +53,12 @@ public class Club {
         updatedAt = Instant.now();
     }
 
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("id", id)
+                .append("externalId", externalId)
+                .append("name", name)
+                .toString();
+    }
 }

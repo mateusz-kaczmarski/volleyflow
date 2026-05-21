@@ -21,8 +21,7 @@ public class ClubController {
     private final ClubService clubService;
 
     @PostMapping()
-    ResponseEntity<ClubDto> createClub(@RequestBody @Valid ClubRequest clubRequest,
-                                       Principal principal) {
+    ResponseEntity<ClubDto> createClub(@RequestBody @Valid ClubRequest clubRequest) {
             return ResponseEntity.ok(clubService.createClub(clubRequest));
     }
 

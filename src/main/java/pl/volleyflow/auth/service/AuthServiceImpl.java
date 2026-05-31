@@ -31,8 +31,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("User registered: {}", userDto.email());
 
         //todo JWT service
-        return AuthResponse.builder()
-                .build();
+        return AuthResponse.success(userDto.externalId());
     }
 
     @Override
@@ -46,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
                 && userAccount.isEmailVerified()
                 && UserAccountStatus.ACTIVE.equals(userAccount.getStatus())) {
             //todo JWT service
-            return new AuthResponse(null, "Login successfully");
+            return AuthResponse.success(userAccount.getExternalId());
         }
         throw new InvalidCredentialsException("Invalid credentials");
     }

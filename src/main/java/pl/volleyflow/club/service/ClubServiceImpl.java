@@ -9,6 +9,9 @@ import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.model.UserNotFoundException;
 import pl.volleyflow.user.service.UserAccountService;
 
+import java.util.List;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -35,6 +38,13 @@ public class ClubServiceImpl implements ClubService {
         log.info("Saved club {}", club);
 
         return ClubMapper.mapToDto(club);
+    }
+
+    @Override
+    public List<ClubDto> getClubsByUser(UUID userExternalId) {
+        return clubRepository.findAllByUserExternalId(userExternalId).stream()
+                .map(ClubMapper::mapToDto)
+                .toList();
     }
 
 }

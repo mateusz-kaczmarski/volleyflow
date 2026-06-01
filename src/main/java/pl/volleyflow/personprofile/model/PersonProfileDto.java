@@ -1,4 +1,4 @@
-package pl.volleyflow.personprofile;
+package pl.volleyflow.personprofile.model;
 
 import java.util.UUID;
 

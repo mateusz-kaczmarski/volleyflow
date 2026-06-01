@@ -5,7 +5,7 @@ import pl.volleyflow.user.entity.UserAccount;
 
 import java.util.Optional;
 
-public interface UserAccountRepository extends JpaRepository<UserAccount, Integer> {
+public interface UserAccountRepository extends JpaRepository<UserAccount, Long> {
 
     boolean existsByEmail(String email);
 

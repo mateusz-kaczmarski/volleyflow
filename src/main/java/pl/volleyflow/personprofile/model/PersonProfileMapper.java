@@ -5,7 +5,7 @@ public class PersonProfileMapper {
     public static PersonProfile mapToEntity(PersonProfileRequest request) {
         return PersonProfile.builder()
                 .firstName(request.firstName())
-                .lastName(request.secondName())
+                .lastName(request.lastName())
                 .displayName(request.displayName())
                 .jumpCm(request.jumpCm())
                 .build();
@@ -18,7 +18,7 @@ public class PersonProfileMapper {
                 personProfile.getFirstName(),
                 personProfile.getLastName(),
                 personProfile.getDisplayName(),
-                personProfile.getJumpCm() != null ? personProfile.getJumpCm() : 0
+                personProfile.getJumpCm()
         );
     }
 }

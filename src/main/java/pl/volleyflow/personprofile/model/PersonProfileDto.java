@@ -6,7 +6,7 @@ public record PersonProfileDto(
         UUID externalId,
         UUID userAccountExternalId,
         String firstName,
-        String secondName,
+        String lastName,
         String displayName,
-        int jumpCm) {
+        Integer jumpCm) {
 }

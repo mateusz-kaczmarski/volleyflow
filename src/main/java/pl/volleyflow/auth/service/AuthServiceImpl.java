@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import pl.volleyflow.auth.controller.UserLoginRequest;
 import pl.volleyflow.auth.dto.AuthResponse;
 import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
+import pl.volleyflow.personprofile.model.PersonProfileRequest;
+import pl.volleyflow.personprofile.service.PersonProfileService;
 import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.entity.UserAccountStatus;
 import pl.volleyflow.user.model.UserAccountDto;
@@ -20,6 +22,7 @@ import pl.volleyflow.user.service.UserAccountService;
 public class AuthServiceImpl implements AuthService {
 
     private final UserAccountService userAccountService;
+    private final PersonProfileService personProfileService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -27,6 +30,9 @@ public class AuthServiceImpl implements AuthService {
         UserAccountRequest userRequest = getUserAccountRequest(request);
 
         UserAccountDto userDto = userAccountService.create(userRequest);
+        UserAccount userAccount = userAccountService.findByEmail(userDto.email())
+                .orElseThrow(() -> new InvalidCredentialsException("User account was not created correctly"));
+        personProfileService.createProfile(userAccount, getPersonProfileRequest(request));
 
         log.info("User registered: {}", userDto.email());
 
@@ -55,6 +61,15 @@ public class AuthServiceImpl implements AuthService {
                 request.email(),
                 request.password(),
                 request.phone()
+        );
+    }
+
+    private PersonProfileRequest getPersonProfileRequest(UserRegisterRequest request) {
+        return new PersonProfileRequest(
+                request.firstName(),
+                request.lastName(),
+                request.displayName(),
+                request.jumpCm()
         );
     }
 

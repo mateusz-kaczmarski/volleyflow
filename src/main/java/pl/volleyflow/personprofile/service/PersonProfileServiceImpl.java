@@ -8,6 +8,7 @@ import pl.volleyflow.personprofile.model.PersonProfileDto;
 import pl.volleyflow.personprofile.model.PersonProfileMapper;
 import pl.volleyflow.personprofile.model.PersonProfileRequest;
 import pl.volleyflow.personprofile.repository.PersonProfileRepository;
+import pl.volleyflow.user.entity.UserAccount;
 
 @Service
 @RequiredArgsConstructor
@@ -18,11 +19,22 @@ public class PersonProfileServiceImpl implements PersonProfileService {
 
     @Override
     public PersonProfileDto createProfile(PersonProfileRequest personProfileRequest) {
-        PersonProfile personProfile = PersonProfileMapper.mapToEntity(personProfileRequest);
-        PersonProfile savedPersonProfile = personProfileRepository.save(personProfile);
+        PersonProfile savedPersonProfile = createProfile(null, personProfileRequest);
 
         log.info("Created person profile {}", savedPersonProfile.getExternalId());
         return PersonProfileMapper.mapToDto(savedPersonProfile);
+    }
+
+    @Override
+    public PersonProfile createProfile(UserAccount userAccount, PersonProfileRequest personProfileRequest) {
+        PersonProfile personProfile = PersonProfileMapper.mapToEntity(personProfileRequest);
+        personProfile.setUserAccount(userAccount);
+        return personProfileRepository.save(personProfile);
+    }
+
+    @Override
+    public java.util.Optional<PersonProfile> findByUserAccount(UserAccount userAccount) {
+        return personProfileRepository.findByUserAccount(userAccount);
     }
 
 }

@@ -12,13 +12,13 @@ public record PersonProfileRequest(
 
         @NotBlank(message = "last name cannot be blank")
         @Size(max = 80, message = "last name cannot exceed 80 characters")
-        String secondName,
+        String lastName,
 
         @Size(max = 120, message = "display name cannot exceed 120 characters")
         String displayName,
 
         @Min(value = 0, message = "jump must be positive")
         @Max(value = 200, message = "jump must be less than 200 cm")
-        int jumpCm) {
+        Integer jumpCm) {
 }
 

@@ -7,11 +7,12 @@ import pl.volleyflow.personprofile.model.PersonProfile;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "club_member", schema = "app")
+@Table(name = "club_membership", schema = "app")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,7 +24,7 @@ public class ClubMembership {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, updatable = false)
+    @Column(nullable = false, unique = true, length = 36, updatable = false)
     private UUID externalId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -44,6 +45,7 @@ public class ClubMembership {
     @Column(length = 20, nullable = false)
     private String season;
 
+    @Builder.Default
     @ElementCollection(targetClass = MemberPosition.class)
     @Enumerated(EnumType.STRING)
     @CollectionTable(
@@ -52,7 +54,7 @@ public class ClubMembership {
             joinColumns = @JoinColumn(name = "club_membership_id")
     )
     @Column(name = "position", nullable = false, length = 30)
-    private Set<MemberPosition> positions;
+    private Set<MemberPosition> positions = new HashSet<>();
 
     @Column(nullable = false)
     private boolean active;

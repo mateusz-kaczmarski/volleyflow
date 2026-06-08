@@ -1,4 +1,9 @@
 package pl.volleyflow.clubmembership.service;
 
-public class ClubMembershipService {
+import pl.volleyflow.clubmembership.model.ClubMembershipDto;
+import pl.volleyflow.clubmembership.model.ClubMembershipRequest;
+
+public interface ClubMembershipService {
+
+    ClubMembershipDto createMembership(ClubMembershipRequest request);
 }

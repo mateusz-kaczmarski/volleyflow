@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface ClubService {
 
-    ClubDto createClub(ClubRequest clubRequest);
+    ClubDto createClub(ClubRequest clubRequest, String ownerEmail);
 
     List<ClubDto> getClubsByUser(UUID userExternalId);
 

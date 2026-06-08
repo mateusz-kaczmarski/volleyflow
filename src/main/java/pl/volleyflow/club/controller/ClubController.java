@@ -8,6 +8,7 @@ import pl.volleyflow.club.model.ClubRequest;
 import pl.volleyflow.club.service.ClubService;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,8 +20,9 @@ public class ClubController {
     private final ClubService clubService;
 
     @PostMapping()
-    ResponseEntity<ClubDto> createClub(@RequestBody @Valid ClubRequest clubRequest) {
-            return ResponseEntity.ok(clubService.createClub(clubRequest));
+    ResponseEntity<ClubDto> createClub(@RequestBody @Valid ClubRequest clubRequest,
+                                       Principal principal) {
+            return ResponseEntity.ok(clubService.createClub(clubRequest, principal.getName()));
     }
 
     @GetMapping("/{userExternalId}")

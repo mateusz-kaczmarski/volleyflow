@@ -11,8 +11,5 @@ public record ClubRequest(
         @Size(max = 255, message = "avatar cannot exceed 20 characters")
         String avatar,
         @Size(max = 1024, message = "description cannot exceed 1024 characters")
-        String description,
-        @NotBlank(message = "owner email cannot be empty")
-        @Email(message = "invalid email format")
-        String ownerEmail) {
+        String description) {
 }

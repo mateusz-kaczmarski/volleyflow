@@ -9,6 +9,7 @@ import pl.volleyflow.auth.dto.AuthResponse;
 import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
 import pl.volleyflow.personprofile.model.PersonProfileRequest;
 import pl.volleyflow.personprofile.service.PersonProfileService;
+import pl.volleyflow.security.JwtService;
 import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.entity.UserAccountStatus;
 import pl.volleyflow.user.model.UserAccountDto;
@@ -24,6 +25,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserAccountService userAccountService;
     private final PersonProfileService personProfileService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Override
     public AuthResponse register(UserRegisterRequest request) {
@@ -33,11 +35,11 @@ public class AuthServiceImpl implements AuthService {
         UserAccount userAccount = userAccountService.findByEmail(userDto.email())
                 .orElseThrow(() -> new InvalidCredentialsException("User account was not created correctly"));
         personProfileService.createProfile(userAccount, getPersonProfileRequest(request));
+        String token = jwtService.generateToken(userAccount);
 
         log.info("User registered: {}", userDto.email());
 
-        //todo JWT service
-        return AuthResponse.success(userDto.externalId());
+        return AuthResponse.registerSuccess(token, userDto.externalId());
     }
 
     @Override
@@ -50,8 +52,8 @@ public class AuthServiceImpl implements AuthService {
         if (isPasswordCorrect
                 && userAccount.isEmailVerified()
                 && UserAccountStatus.ACTIVE.equals(userAccount.getStatus())) {
-            //todo JWT service
-            return AuthResponse.success(userAccount.getExternalId());
+            String token = jwtService.generateToken(userAccount);
+            return AuthResponse.loginSuccess(token, userAccount.getExternalId());
         }
         throw new InvalidCredentialsException("Invalid credentials");
     }

@@ -21,14 +21,14 @@ public class ClubServiceImpl implements ClubService {
     private final UserAccountService userAccountService;
 
     @Override
-    public ClubDto createClub(ClubRequest clubRequest) {
+    public ClubDto createClub(ClubRequest clubRequest, String ownerEmail) {
         log.info("Start register club {} ", clubRequest);
 
         if (clubRepository.existsByName(clubRequest.name())) {
             throw new ClubAlreadyExists("Club with name " + clubRequest.name() + " already exists");
         }
 
-        UserAccount userAccount = userAccountService.findByEmail(clubRequest.ownerEmail()).
+        UserAccount userAccount = userAccountService.findByEmail(ownerEmail).
                 orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Club club = ClubMapper.mapToEntity(clubRequest);

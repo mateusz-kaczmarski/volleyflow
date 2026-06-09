@@ -42,7 +42,7 @@ public class ClubMembership {
     @Column(name = "shirt_number")
     private Integer shirtNumber;
 
-    @Column(length = 20, nullable = false)
+    @Column(length = 20)
     private String season;
 
     @Builder.Default

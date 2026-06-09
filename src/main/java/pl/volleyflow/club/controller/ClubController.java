@@ -25,9 +25,14 @@ public class ClubController {
             return ResponseEntity.ok(clubService.createClub(clubRequest, principal.getName()));
     }
 
-    @GetMapping("/{userExternalId}")
+    @GetMapping("/user/{userExternalId}")
     List<ClubDto> getClubsByUser(@PathVariable UUID userExternalId) {
         return clubService.getClubsByUser(userExternalId);
+    }
+
+    @GetMapping("/my-clubs")
+    List<ClubDto> getMyClubs(Principal principal) {
+        return clubService.getMyClubs(principal.getName());
     }
 
 }

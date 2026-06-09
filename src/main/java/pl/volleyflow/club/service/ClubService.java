@@ -12,4 +12,6 @@ public interface ClubService {
 
     List<ClubDto> getClubsByUser(UUID userExternalId);
 
+    List<ClubDto> getMyClubs(String email);
+
 }

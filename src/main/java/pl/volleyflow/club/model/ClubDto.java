@@ -9,5 +9,6 @@ public record ClubDto(
         UUID externalId,
         String name,
         String avatar,
-        String description) {
+        String description,
+        String userRole) {
 }

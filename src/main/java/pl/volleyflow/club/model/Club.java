@@ -3,7 +3,6 @@ package pl.volleyflow.club.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import pl.volleyflow.user.entity.UserAccount;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -38,10 +37,6 @@ public class Club {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private UserAccount owner;
 
     @Version
     private int version;

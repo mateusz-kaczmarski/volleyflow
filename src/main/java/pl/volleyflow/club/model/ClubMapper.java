@@ -16,6 +16,17 @@ public class ClubMapper {
                 .name(club.getName())
                 .avatar(club.getAvatar())
                 .description(club.getDescription())
+                .userRole(null)
+                .build();
+    }
+
+    public static ClubDto mapToDto(Club club, String userRole) {
+        return ClubDto.builder()
+                .externalId(club.getExternalId())
+                .name(club.getName())
+                .avatar(club.getAvatar())
+                .description(club.getDescription())
+                .userRole(userRole)
                 .build();
     }
 }

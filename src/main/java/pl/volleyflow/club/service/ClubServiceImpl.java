@@ -5,6 +5,11 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import pl.volleyflow.club.model.*;
 import pl.volleyflow.club.repository.ClubRepository;
+import pl.volleyflow.clubmembership.model.ClubMembership;
+import pl.volleyflow.clubmembership.model.ClubMembershipRole;
+import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
+import pl.volleyflow.personprofile.model.PersonProfile;
+import pl.volleyflow.personprofile.service.PersonProfileService;
 import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.model.UserNotFoundException;
 import pl.volleyflow.user.service.UserAccountService;
@@ -18,6 +23,8 @@ import java.util.UUID;
 public class ClubServiceImpl implements ClubService {
 
     private final ClubRepository clubRepository;
+    private final ClubMembershipRepository clubMembershipRepository;
+    private final PersonProfileService personProfileService;
     private final UserAccountService userAccountService;
 
     @Override
@@ -32,19 +39,49 @@ public class ClubServiceImpl implements ClubService {
                 orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Club club = ClubMapper.mapToEntity(clubRequest);
-        club.setOwner(userAccount);
 
-        clubRepository.save(club);
-        log.info("Saved club {}", club);
+        Club savedClub = clubRepository.save(club);
+        createOwnerMembership(savedClub, userAccount);
+        log.info("Saved club {}", savedClub);
 
-        return ClubMapper.mapToDto(club);
+        return ClubMapper.mapToDto(savedClub);
     }
 
     @Override
     public List<ClubDto> getClubsByUser(UUID userExternalId) {
-        return clubRepository.findAllByUserExternalId(userExternalId).stream()
-                .map(ClubMapper::mapToDto)
+        return clubMembershipRepository.findAllByPersonProfile_UserAccount_ExternalId(userExternalId).stream()
+                .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
+    }
+
+    @Override
+    public List<ClubDto> getMyClubs(String email) {
+        UserAccount userAccount = userAccountService.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return clubMembershipRepository.findAllByPersonProfile_UserAccount_ExternalId(userAccount.getExternalId()).stream()
+                .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
+                .toList();
+    }
+
+    private void createOwnerMembership(Club club, UserAccount userAccount) {
+        PersonProfile personProfile = personProfileService.findByUserAccount(userAccount)
+                .orElseThrow(() -> new UserNotFoundException("Person profile not found for user"));
+
+        if (clubMembershipRepository.existsByClub_ExternalIdAndPersonProfile_UserAccount_ExternalId(
+                club.getExternalId(),
+                userAccount.getExternalId()
+        )) {
+            return;
+        }
+
+        ClubMembership clubMembership = ClubMembership.builder()
+                .club(club)
+                .personProfile(personProfile)
+                .role(ClubMembershipRole.OWNER)
+                .active(true)
+                .build();
+
+        clubMembershipRepository.save(clubMembership);
     }
 
 }

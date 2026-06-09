@@ -37,9 +37,6 @@ public class ClubMembershipMapper {
                 .shirtNumber(clubMembership.getShirtNumber())
                 .season(clubMembership.getSeason())
                 .positions(clubMembership.getPositions())
-                .activeFrom(clubMembership.getActiveFrom())
-                .activeTo(clubMembership.getActiveTo())
-                .active(clubMembership.isActive())
                 .build();
     }
 }

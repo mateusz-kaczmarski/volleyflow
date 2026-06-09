@@ -49,7 +49,7 @@ public class ClubServiceImpl implements ClubService {
 
     @Override
     public List<ClubDto> getClubsByUser(UUID userExternalId) {
-        return clubMembershipRepository.findAllByPersonProfile_UserAccount_ExternalId(userExternalId).stream()
+        return clubMembershipRepository.findAllByPersonProfileUserAccountExternalId(userExternalId).stream()
                 .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
     }
@@ -58,7 +58,7 @@ public class ClubServiceImpl implements ClubService {
     public List<ClubDto> getMyClubs(String email) {
         UserAccount userAccount = userAccountService.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return clubMembershipRepository.findAllByPersonProfile_UserAccount_ExternalId(userAccount.getExternalId()).stream()
+        return clubMembershipRepository.findAllByPersonProfileUserAccountExternalId(userAccount.getExternalId()).stream()
                 .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
     }
@@ -67,7 +67,7 @@ public class ClubServiceImpl implements ClubService {
         PersonProfile personProfile = personProfileService.findByUserAccount(userAccount)
                 .orElseThrow(() -> new UserNotFoundException("Person profile not found for user"));
 
-        if (clubMembershipRepository.existsByClub_ExternalIdAndPersonProfile_UserAccount_ExternalId(
+        if (clubMembershipRepository.existsByClubExternalIdAndPersonProfileUserAccountExternalId(
                 club.getExternalId(),
                 userAccount.getExternalId()
         )) {

@@ -2,23 +2,28 @@ package pl.volleyflow.clubmembership.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import pl.volleyflow.clubmembership.model.ClubMembership;
+import pl.volleyflow.clubmembership.model.ClubMembershipRole;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface ClubMembershipRepository extends JpaRepository<ClubMembership, Long> {
 
-    boolean existsByClub_ExternalIdAndPersonProfile_FirstNameAndPersonProfile_LastNameAndSeason(
+    boolean existsByClubExternalIdAndPersonProfileFirstNameAndPersonProfileLastNameAndSeason(
             UUID clubExternalId,
             String firstName,
             String lastName,
             String season
     );
 
-    boolean existsByClub_ExternalIdAndPersonProfile_UserAccount_ExternalId(
+    boolean existsByClubExternalIdAndPersonProfileUserAccountExternalId(
             UUID clubExternalId,
             UUID userAccountExternalId
     );
 
-    List<ClubMembership> findAllByPersonProfile_UserAccount_ExternalId(UUID userAccountExternalId);
+    boolean existsByClubExternalIdAndPersonProfileUserAccountEmail(UUID clubExternalId, String email);
+
+    List<ClubMembership> findAllByPersonProfileUserAccountExternalId(UUID userAccountExternalId);
+
+    List<ClubMembership> findAllByClubExternalIdAndRole(UUID clubExternalId, ClubMembershipRole role);
 }

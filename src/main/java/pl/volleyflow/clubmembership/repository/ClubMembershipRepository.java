@@ -1,6 +1,8 @@
 package pl.volleyflow.clubmembership.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import pl.volleyflow.clubmembership.model.ClubMembership;
 import pl.volleyflow.clubmembership.model.ClubMembershipRole;
 
@@ -26,4 +28,17 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
     List<ClubMembership> findAllByPersonProfileUserAccountExternalId(UUID userAccountExternalId);
 
     List<ClubMembership> findAllByClubExternalIdAndRole(UUID clubExternalId, ClubMembershipRole role);
+
+    @Query(value = """
+            select case
+                     when count(*) > 0 then true
+                     else false
+                   end
+            from app.club_membership cm
+            join app.person_profile pp on pp.id = cm.person_profile_id
+            where pp.user_account_id = :userId
+              and cm.club_id = :clubId
+              and cm.role = 'OWNER'
+            """, nativeQuery = true)
+    boolean isOwnerClub(@Param("userId") long userId, @Param("clubId") long clubId);
 }

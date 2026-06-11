@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.volleyflow.club.model.ClubDto;
 import pl.volleyflow.club.model.ClubRequest;
+import pl.volleyflow.club.model.ClubUpdateRequest;
 import pl.volleyflow.club.service.ClubService;
 
 import javax.validation.Valid;
@@ -22,7 +23,7 @@ public class ClubController {
     @PostMapping()
     ResponseEntity<ClubDto> createClub(@RequestBody @Valid ClubRequest clubRequest,
                                        Principal principal) {
-            return ResponseEntity.ok(clubService.createClub(clubRequest, principal.getName()));
+        return ResponseEntity.ok(clubService.createClub(clubRequest, principal.getName()));
     }
 
     @GetMapping("/user/{userExternalId}")
@@ -33,6 +34,13 @@ public class ClubController {
     @GetMapping("/my-clubs")
     List<ClubDto> getMyClubs(Principal principal) {
         return clubService.getMyClubs(principal.getName());
+    }
+
+    @PutMapping("/{clubExternalId}")
+    ResponseEntity<ClubDto> updateClub(@PathVariable UUID clubExternalId,
+                                       @Valid @RequestBody ClubUpdateRequest clubUpdateRequest,
+                                       Principal principal) {
+        return ResponseEntity.ok(clubService.updateClub(clubUpdateRequest, clubExternalId, principal.getName()));
     }
 
 }

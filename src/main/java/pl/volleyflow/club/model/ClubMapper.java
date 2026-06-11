@@ -29,4 +29,16 @@ public class ClubMapper {
                 .userRole(userRole)
                 .build();
     }
+
+    public static void updateEntity(Club club, ClubUpdateRequest request) {
+        if (request.name() != null) {
+            club.setName(request.name());
+        }
+        if (request.avatar() != null) {
+            club.setAvatar(request.avatar());
+        }
+        if (request.description() != null) {
+            club.setDescription(request.description());
+        }
+    }
 }

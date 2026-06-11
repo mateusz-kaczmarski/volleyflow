@@ -11,6 +11,7 @@ import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
 import pl.volleyflow.personprofile.model.PersonProfile;
 import pl.volleyflow.personprofile.service.PersonProfileService;
 import pl.volleyflow.user.entity.UserAccount;
+import pl.volleyflow.user.model.UserNoPermission;
 import pl.volleyflow.user.model.UserNotFoundException;
 import pl.volleyflow.user.service.UserAccountService;
 
@@ -61,6 +62,24 @@ public class ClubServiceImpl implements ClubService {
         return clubMembershipRepository.findAllByPersonProfileUserAccountExternalId(userAccount.getExternalId()).stream()
                 .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
+    }
+
+    @Override
+    public ClubDto updateClub(ClubUpdateRequest clubUpdateRequest, UUID clubExternalId, String userEmail) {
+        UserAccount userAccount = userAccountService.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Club club = clubRepository.findByExternalId(clubExternalId)
+                .orElseThrow(() -> new ClubNotFoundException("Club not found"));
+
+        if (!clubMembershipRepository.isOwnerClub(userAccount.getId(), club.getId())) {
+            throw new UserNoPermission("User have no permission to edit this club");
+        }
+
+        ClubMapper.updateEntity(club, clubUpdateRequest);
+        Club updatedClub = clubRepository.save(club);
+        return ClubMapper.mapToDto(updatedClub);
+
     }
 
     private void createOwnerMembership(Club club, UserAccount userAccount) {

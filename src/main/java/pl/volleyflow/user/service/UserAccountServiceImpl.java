@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.model.*;
 import pl.volleyflow.user.repository.UserAccountRepository;
@@ -13,12 +14,14 @@ import java.util.Optional;
 @Service("userAccountService")
 @RequiredArgsConstructor
 @Log4j2
+@Transactional(readOnly = true)
 public class UserAccountServiceImpl implements UserAccountService {
 
     private final UserAccountRepository userAccountRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public UserAccountDto create(UserAccountRequest userAccountRequest) {
         if (userAccountRepository.existsByEmail(userAccountRequest.email())) {
             throw new UserAccountAlreadyExists("User with email " + userAccountRequest.email() + "already exists");

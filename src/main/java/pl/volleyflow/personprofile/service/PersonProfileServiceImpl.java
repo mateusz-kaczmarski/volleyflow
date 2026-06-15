@@ -3,6 +3,7 @@ package pl.volleyflow.personprofile.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.personprofile.model.PersonProfile;
 import pl.volleyflow.personprofile.model.PersonProfileDto;
 import pl.volleyflow.personprofile.model.PersonProfileMapper;
@@ -13,11 +14,13 @@ import pl.volleyflow.user.entity.UserAccount;
 @Service
 @RequiredArgsConstructor
 @Log4j2
+@Transactional(readOnly = true)
 public class PersonProfileServiceImpl implements PersonProfileService {
 
     private final PersonProfileRepository personProfileRepository;
 
     @Override
+    @Transactional
     public PersonProfileDto createProfile(PersonProfileRequest personProfileRequest) {
         PersonProfile savedPersonProfile = createProfile(null, personProfileRequest);
 
@@ -26,6 +29,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
     }
 
     @Override
+    @Transactional
     public PersonProfile createProfile(UserAccount userAccount, PersonProfileRequest personProfileRequest) {
         PersonProfile personProfile = PersonProfileMapper.mapToEntity(personProfileRequest);
         personProfile.setUserAccount(userAccount);

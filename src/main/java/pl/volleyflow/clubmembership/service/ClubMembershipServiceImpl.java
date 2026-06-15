@@ -3,6 +3,7 @@ package pl.volleyflow.clubmembership.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.club.model.Club;
 import pl.volleyflow.club.model.ClubNotFoundException;
 import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Log4j2
+@Transactional(readOnly = true)
 public class ClubMembershipServiceImpl implements ClubMembershipService {
 
     private final ClubRepository clubRepository;
@@ -29,6 +31,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     private final ClubMembershipRepository clubMembershipRepository;
 
     @Override
+    @Transactional
     public ClubMembershipDto createMembership(ClubMembershipRequest request) {
         log.info("Start create club membership {}", request);
 

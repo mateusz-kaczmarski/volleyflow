@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.auth.controller.UserLoginRequest;
 import pl.volleyflow.auth.dto.AuthResponse;
 import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
@@ -20,6 +21,7 @@ import pl.volleyflow.user.service.UserAccountService;
 @Service("authService")
 @RequiredArgsConstructor
 @Log4j2
+@Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
 
     private final UserAccountService userAccountService;
@@ -28,6 +30,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
 
     @Override
+    @Transactional
     public AuthResponse register(UserRegisterRequest request) {
         UserAccountRequest userRequest = getUserAccountRequest(request);
 

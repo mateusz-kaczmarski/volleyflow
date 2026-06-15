@@ -3,6 +3,7 @@ package pl.volleyflow.club.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.club.model.*;
 import pl.volleyflow.club.repository.ClubRepository;
 import pl.volleyflow.clubmembership.model.ClubMembership;
@@ -21,6 +22,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Log4j2
+@Transactional(readOnly = true)
 public class ClubServiceImpl implements ClubService {
 
     private final ClubRepository clubRepository;
@@ -29,6 +31,7 @@ public class ClubServiceImpl implements ClubService {
     private final UserAccountService userAccountService;
 
     @Override
+    @Transactional
     public ClubDto createClub(ClubRequest clubRequest, String ownerEmail) {
         log.info("Start register club {} ", clubRequest);
 
@@ -65,6 +68,7 @@ public class ClubServiceImpl implements ClubService {
     }
 
     @Override
+    @Transactional
     public ClubDto updateClub(ClubUpdateRequest clubUpdateRequest, UUID clubExternalId, String userEmail) {
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -83,6 +87,7 @@ public class ClubServiceImpl implements ClubService {
     }
 
     @Override
+    @Transactional
     public void deleteClub(UUID clubExternalId, String userEmail) {
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));

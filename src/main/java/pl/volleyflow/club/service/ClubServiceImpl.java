@@ -80,6 +80,14 @@ public class ClubServiceImpl implements ClubService {
             throw new UserNoPermission("User has no permission to edit this club");
         }
 
+        if (clubUpdateRequest.name() != null) {
+            clubRepository.findByNameAndActiveTrue(clubUpdateRequest.name())
+                    .filter(existingClub -> !existingClub.getExternalId().equals(clubExternalId))
+                    .ifPresent(existingClub -> {
+                        throw new ClubAlreadyExists("Club with name " + clubUpdateRequest.name() + " already exists");
+                    });
+        }
+
         ClubMapper.updateEntity(club, clubUpdateRequest);
         Club updatedClub = clubRepository.save(club);
         return ClubMapper.mapToDto(updatedClub);

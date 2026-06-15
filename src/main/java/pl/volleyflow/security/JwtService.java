@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.volleyflow.user.entity.UserAccount;
+import pl.volleyflow.user.entity.UserAccountStatus;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -41,7 +42,10 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserAccount userAccount) {
         String username = extractUsername(token);
-        return username.equals(userAccount.getEmail()) && !isTokenExpired(token);
+        return username.equals(userAccount.getEmail())
+                && !isTokenExpired(token)
+                && userAccount.isEmailVerified()
+                && UserAccountStatus.ACTIVE.equals(userAccount.getStatus());
     }
 
     private boolean isTokenExpired(String token) {

@@ -38,6 +38,8 @@ public class Club {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    private boolean active;
+
     @Version
     private int version;
 
@@ -46,6 +48,7 @@ public class Club {
         externalId = UUID.randomUUID();
         createdAt = Instant.now();
         updatedAt = Instant.now();
+        active = true;
     }
 
     @PreUpdate

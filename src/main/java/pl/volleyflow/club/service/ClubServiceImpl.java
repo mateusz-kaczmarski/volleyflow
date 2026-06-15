@@ -32,7 +32,7 @@ public class ClubServiceImpl implements ClubService {
     public ClubDto createClub(ClubRequest clubRequest, String ownerEmail) {
         log.info("Start register club {} ", clubRequest);
 
-        if (clubRepository.existsByName(clubRequest.name())) {
+        if (clubRepository.existsByNameAndActiveTrue(clubRequest.name())) {
             throw new ClubAlreadyExists("Club with name " + clubRequest.name() + " already exists");
         }
 
@@ -50,16 +50,16 @@ public class ClubServiceImpl implements ClubService {
 
     @Override
     public List<ClubDto> getClubsByUser(UUID userExternalId) {
-        return clubMembershipRepository.findAllByPersonProfileUserAccountExternalId(userExternalId).stream()
+        return clubMembershipRepository.findAllByPersonProfileUserAccountExternalIdAndClubActiveTrue(userExternalId).stream()
                 .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
     }
 
     @Override
-    public List<ClubDto> getMyClubs(String email) {
-        UserAccount userAccount = userAccountService.findByEmail(email)
+    public List<ClubDto> getMyClubs(String userEmail) {
+        UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return clubMembershipRepository.findAllByPersonProfileUserAccountExternalId(userAccount.getExternalId()).stream()
+        return clubMembershipRepository.findAllByPersonProfileUserAccountExternalIdAndClubActiveTrue(userAccount.getExternalId()).stream()
                 .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
     }
@@ -73,13 +73,29 @@ public class ClubServiceImpl implements ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
         if (!clubMembershipRepository.isOwnerClub(userAccount.getId(), club.getId())) {
-            throw new UserNoPermission("User have no permission to edit this club");
+            throw new UserNoPermission("User has no permission to edit this club");
         }
 
         ClubMapper.updateEntity(club, clubUpdateRequest);
         Club updatedClub = clubRepository.save(club);
         return ClubMapper.mapToDto(updatedClub);
 
+    }
+
+    @Override
+    public void deleteClub(UUID clubExternalId, String userEmail) {
+        UserAccount userAccount = userAccountService.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Club club = clubRepository.findByExternalId(clubExternalId)
+                .orElseThrow(() -> new ClubNotFoundException("Club not found"));
+
+        if (!clubMembershipRepository.isOwnerClub(userAccount.getId(), club.getId())) {
+            throw new UserNoPermission("User has no permission to edit this club");
+        }
+
+        clubRepository.setActiveFalseById(club.getId());
+        log.info("Change status active for false for club {}", club.getName());
     }
 
     private void createOwnerMembership(Club club, UserAccount userAccount) {

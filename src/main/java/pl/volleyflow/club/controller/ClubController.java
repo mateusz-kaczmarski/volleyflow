@@ -43,4 +43,11 @@ public class ClubController {
         return ResponseEntity.ok(clubService.updateClub(clubUpdateRequest, clubExternalId, principal.getName()));
     }
 
+    @DeleteMapping("/{clubExternalId}")
+    ResponseEntity<Void> deleteClub(@PathVariable UUID clubExternalId,
+                                    Principal principal) {
+        clubService.deleteClub(clubExternalId, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
+
 }

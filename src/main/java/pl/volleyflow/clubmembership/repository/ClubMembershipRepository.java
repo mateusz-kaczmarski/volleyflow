@@ -23,11 +23,18 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             UUID userAccountExternalId
     );
 
-    boolean existsByClubExternalIdAndPersonProfileUserAccountEmail(UUID clubExternalId, String email);
+    boolean existsByClubExternalIdAndPersonProfileUserAccountEmail(
+            UUID clubExternalId,
+            String email);
 
-    List<ClubMembership> findAllByPersonProfileUserAccountExternalId(UUID userAccountExternalId);
+    List<ClubMembership> findAllByPersonProfileUserAccountExternalIdAndClubActiveTrue(
+            UUID userAccountExternalId
+    );
 
-    List<ClubMembership> findAllByClubExternalIdAndRole(UUID clubExternalId, ClubMembershipRole role);
+    List<ClubMembership> findAllByClubExternalIdAndRoleAndClubActiveTrue(
+            UUID clubExternalId,
+            ClubMembershipRole role
+    );
 
     @Query(value = """
             select case

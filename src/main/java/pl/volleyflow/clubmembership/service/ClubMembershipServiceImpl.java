@@ -54,7 +54,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
             throw new ClubMembershipAccessDeniedException("You do not have access to this club");
         }
 
-        return clubMembershipRepository.findAllByClubExternalIdAndRole(clubExternalId, ClubMembershipRole.PLAYER)
+        return clubMembershipRepository.findAllByClubExternalIdAndRoleAndClubActiveTrue(clubExternalId, ClubMembershipRole.PLAYER)
                 .stream()
                 .map(ClubMembershipMapper::mapToDto)
                 .toList();

@@ -5,7 +5,7 @@ import lombok.Builder;
 import java.util.UUID;
 
 @Builder
-public record ClubDto(
+public record ClubBasicDto(
         UUID externalId,
         String name,
         String avatar,

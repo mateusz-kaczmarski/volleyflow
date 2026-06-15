@@ -10,8 +10,8 @@ public class ClubMapper {
                 .build();
     }
 
-    public static ClubDto mapToDto(Club club) {
-        return ClubDto.builder()
+    public static ClubBasicDto mapToDto(Club club) {
+        return ClubBasicDto.builder()
                 .externalId(club.getExternalId())
                 .name(club.getName())
                 .avatar(club.getAvatar())
@@ -20,8 +20,8 @@ public class ClubMapper {
                 .build();
     }
 
-    public static ClubDto mapToDto(Club club, String userRole) {
-        return ClubDto.builder()
+    public static ClubBasicDto mapToDto(Club club, String userRole) {
+        return ClubBasicDto.builder()
                 .externalId(club.getExternalId())
                 .name(club.getName())
                 .avatar(club.getAvatar())

@@ -32,7 +32,7 @@ public class ClubServiceImpl implements ClubService {
 
     @Override
     @Transactional
-    public ClubDto createClub(ClubRequest clubRequest, String ownerEmail) {
+    public ClubBasicDto createClub(ClubRequest clubRequest, String ownerEmail) {
         log.info("Start register club {} ", clubRequest);
 
         if (clubRepository.existsByNameAndActiveTrue(clubRequest.name())) {
@@ -52,14 +52,14 @@ public class ClubServiceImpl implements ClubService {
     }
 
     @Override
-    public List<ClubDto> getClubsByUser(UUID userExternalId) {
+    public List<ClubBasicDto> getClubsByUser(UUID userExternalId) {
         return clubMembershipRepository.findAllByPersonProfileUserAccountExternalIdAndClubActiveTrue(userExternalId).stream()
                 .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
     }
 
     @Override
-    public List<ClubDto> getMyClubs(String userEmail) {
+    public List<ClubBasicDto> getMyClubs(String userEmail) {
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return clubMembershipRepository.findAllByPersonProfileUserAccountExternalIdAndClubActiveTrue(userAccount.getExternalId()).stream()
@@ -69,7 +69,7 @@ public class ClubServiceImpl implements ClubService {
 
     @Override
     @Transactional
-    public ClubDto updateClub(ClubUpdateRequest clubUpdateRequest, UUID clubExternalId, String userEmail) {
+    public ClubBasicDto updateClub(ClubUpdateRequest clubUpdateRequest, UUID clubExternalId, String userEmail) {
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -109,6 +109,13 @@ public class ClubServiceImpl implements ClubService {
 
         clubRepository.setActiveFalseById(club.getId());
         log.info("Change status active for false for club {}", club.getName());
+    }
+
+    @Override
+    public ClubBasicDto getClub(UUID clubExternalId) {
+        return clubRepository.findByExternalId(clubExternalId)
+                .map(ClubMapper::mapToDto)
+                .orElseThrow(() -> new ClubNotFoundException("Club not found"));
     }
 
     private void createOwnerMembership(Club club, UserAccount userAccount) {

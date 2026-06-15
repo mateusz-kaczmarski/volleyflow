@@ -1,6 +1,6 @@
 package pl.volleyflow.club.service;
 
-import pl.volleyflow.club.model.ClubDto;
+import pl.volleyflow.club.model.ClubBasicDto;
 import pl.volleyflow.club.model.ClubRequest;
 import pl.volleyflow.club.model.ClubUpdateRequest;
 
@@ -9,16 +9,16 @@ import java.util.UUID;
 
 public interface ClubService {
 
-    ClubDto createClub(ClubRequest clubRequest, String ownerEmail);
+    ClubBasicDto createClub(ClubRequest clubRequest, String ownerEmail);
 
-    List<ClubDto> getClubsByUser(UUID userExternalId);
+    List<ClubBasicDto> getClubsByUser(UUID userExternalId);
 
-    List<ClubDto> getMyClubs(String userEmail);
+    List<ClubBasicDto> getMyClubs(String userEmail);
 
-    ClubDto updateClub(ClubUpdateRequest clubUpdateRequest, UUID clubExternalId, String userEmail);
+    ClubBasicDto updateClub(ClubUpdateRequest clubUpdateRequest, UUID clubExternalId, String userEmail);
 
     void deleteClub(UUID clubExternalId, String userEmail);
 
-
+    ClubBasicDto getClub(UUID clubExternalId);
 
 }

@@ -6,13 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.club.model.Club;
 import pl.volleyflow.club.model.ClubNotFoundException;
-import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
 import pl.volleyflow.club.repository.ClubRepository;
-import pl.volleyflow.clubmembership.model.ClubMembership;
-import pl.volleyflow.clubmembership.model.ClubMembershipDto;
-import pl.volleyflow.clubmembership.model.ClubMembershipMapper;
-import pl.volleyflow.clubmembership.model.ClubMembershipRequest;
-import pl.volleyflow.clubmembership.model.ClubMembershipRole;
+import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
+import pl.volleyflow.clubmembership.model.*;
 import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
 import pl.volleyflow.personprofile.model.PersonProfile;
 import pl.volleyflow.personprofile.repository.PersonProfileRepository;
@@ -52,12 +48,16 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     }
 
     @Override
-    public List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId, String email) {
+    public List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId, String email, Boolean active) {
         if (!clubMembershipRepository.existsByClubExternalIdAndPersonProfileUserAccountEmail(clubExternalId, email)) {
             throw new ClubMembershipAccessDeniedException("You do not have access to this club");
         }
 
-        return clubMembershipRepository.findAllByClubExternalIdAndRoleAndClubActiveTrue(clubExternalId, ClubMembershipRole.PLAYER)
+        return clubMembershipRepository.findAllByClubExternalIdAndRoleAndActiveFilter(
+                        clubExternalId,
+                        ClubMembershipRole.PLAYER.name(),
+                        active
+                )
                 .stream()
                 .map(ClubMembershipMapper::mapToDto)
                 .toList();

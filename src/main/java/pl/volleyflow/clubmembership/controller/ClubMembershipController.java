@@ -3,14 +3,9 @@ package pl.volleyflow.clubmembership.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import pl.volleyflow.clubmembership.model.ClubMembershipRequest;
+import org.springframework.web.bind.annotation.*;
 import pl.volleyflow.clubmembership.model.ClubMembershipDto;
+import pl.volleyflow.clubmembership.model.ClubMembershipRequest;
 import pl.volleyflow.clubmembership.service.ClubMembershipService;
 
 import javax.validation.Valid;
@@ -31,10 +26,11 @@ public class ClubMembershipController {
         return ResponseEntity.status(HttpStatus.CREATED).body(clubMembershipService.createMembership(request));
     }
 
-    @GetMapping("/club/{clubExternalId}/players")
+    @GetMapping("/{clubExternalId}/players")
     List<ClubMembershipDto> getPlayersByClub(@PathVariable UUID clubExternalId,
+                                             @RequestParam(required = false) Boolean active,
                                              Principal principal) {
-        return clubMembershipService.getPlayersByClub(clubExternalId, principal.getName());
+        return clubMembershipService.getPlayersByClub(clubExternalId, principal.getName(), active);
     }
 
 }

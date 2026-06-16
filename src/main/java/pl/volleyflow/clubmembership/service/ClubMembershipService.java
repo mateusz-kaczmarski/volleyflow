@@ -10,5 +10,6 @@ public interface ClubMembershipService {
 
     ClubMembershipDto createMembership(ClubMembershipRequest request);
 
-    List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId, String email);
+    List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId, String email, Boolean active);
+
 }

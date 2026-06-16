@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.volleyflow.club.model.ClubBasicDto;
+import pl.volleyflow.club.model.ClubDetailsDto;
 import pl.volleyflow.club.model.ClubRequest;
 import pl.volleyflow.club.model.ClubUpdateRequest;
 import pl.volleyflow.club.service.ClubService;
@@ -39,6 +40,12 @@ public class ClubController {
     @GetMapping("/{clubExternalId}")
     ResponseEntity<ClubBasicDto> getClub(@PathVariable UUID clubExternalId) {
         return ResponseEntity.ok(clubService.getClub(clubExternalId));
+    }
+
+    @GetMapping("/{clubExternalId}/details")
+    ResponseEntity<ClubDetailsDto> getClubDetails(@PathVariable UUID clubExternalId,
+                                                  Principal principal) {
+        return ResponseEntity.ok(clubService.getClubDetails(clubExternalId, principal.getName()));
     }
 
     @PutMapping("/{clubExternalId}")

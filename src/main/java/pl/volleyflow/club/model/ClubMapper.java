@@ -1,5 +1,9 @@
 package pl.volleyflow.club.model;
 
+import pl.volleyflow.clubmembership.model.ClubMemberDto;
+
+import java.util.List;
+
 public class ClubMapper {
 
     public static Club mapToEntity(ClubRequest clubRequest) {
@@ -27,6 +31,17 @@ public class ClubMapper {
                 .avatar(club.getAvatar())
                 .description(club.getDescription())
                 .userRole(userRole)
+                .build();
+    }
+
+    public static ClubDetailsDto mapToDetailsDto(Club club, String userRole, List<ClubMemberDto> members) {
+        return ClubDetailsDto.builder()
+                .externalId(club.getExternalId())
+                .name(club.getName())
+                .avatar(club.getAvatar())
+                .description(club.getDescription())
+                .userRole(userRole)
+                .members(members)
                 .build();
     }
 

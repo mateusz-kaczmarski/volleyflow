@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.club.model.*;
 import pl.volleyflow.club.repository.ClubRepository;
+import pl.volleyflow.clubmembership.model.ClubMemberDto;
 import pl.volleyflow.clubmembership.model.ClubMembership;
+import pl.volleyflow.clubmembership.model.ClubMembershipMapper;
 import pl.volleyflow.clubmembership.model.ClubMembershipRole;
 import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
 import pl.volleyflow.personprofile.model.PersonProfile;
@@ -117,6 +119,29 @@ public class ClubServiceImpl implements ClubService {
                 .map(ClubMapper::mapToDto)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
     }
+
+    @Override
+    public ClubDetailsDto getClubDetails(UUID clubExternalId, String userEmail) {
+        UserAccount userAccount = userAccountService.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Club club = clubRepository.findByExternalId(clubExternalId)
+                .orElseThrow(() -> new ClubNotFoundException("Club not found"));
+
+        if (!clubMembershipRepository.existsByClubExternalIdAndPersonProfileUserAccountEmail(clubExternalId, userEmail)) {
+            throw new UserNoPermission("User has no permission to watch this club");
+        }
+
+        String userRole = clubMembershipRepository.findRoleByClubExternalIdAndUserEmail(clubExternalId, userEmail)
+                .orElse(null);
+        List<ClubMemberDto> members = clubMembershipRepository.findAllPlayersByClubExternalId(clubExternalId)
+                .stream()
+                .map(ClubMembershipMapper::mapToClubMemberDto)
+                .toList();
+
+        return ClubMapper.mapToDetailsDto(club, userRole, members);
+    }
+
 
     private void createOwnerMembership(Club club, UserAccount userAccount) {
         PersonProfile personProfile = personProfileService.findByUserAccount(userAccount)

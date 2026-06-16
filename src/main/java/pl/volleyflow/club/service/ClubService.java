@@ -1,6 +1,7 @@
 package pl.volleyflow.club.service;
 
 import pl.volleyflow.club.model.ClubBasicDto;
+import pl.volleyflow.club.model.ClubDetailsDto;
 import pl.volleyflow.club.model.ClubRequest;
 import pl.volleyflow.club.model.ClubUpdateRequest;
 
@@ -20,5 +21,7 @@ public interface ClubService {
     void deleteClub(UUID clubExternalId, String userEmail);
 
     ClubBasicDto getClub(UUID clubExternalId);
+
+    ClubDetailsDto getClubDetails(UUID clubExternalId, String userEmail);
 
 }

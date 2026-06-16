@@ -36,7 +36,24 @@ public class ClubMembershipMapper {
                 .displayName(clubMembership.getPersonProfile().getDisplayName())
                 .shirtNumber(clubMembership.getShirtNumber())
                 .season(clubMembership.getSeason())
-                .positions(clubMembership.getPositions())
+                .positions(new HashSet<>(clubMembership.getPositions()))
+                .build();
+    }
+
+    public static ClubMemberDto mapToClubMemberDto(ClubMembership clubMembership) {
+        return ClubMemberDto.builder()
+                .externalId(clubMembership.getExternalId())
+                .personProfileExternalId(clubMembership.getPersonProfile().getExternalId())
+                .role(clubMembership.getRole())
+                .firstName(clubMembership.getPersonProfile().getFirstName())
+                .lastName(clubMembership.getPersonProfile().getLastName())
+                .displayName(clubMembership.getPersonProfile().getDisplayName())
+                .shirtNumber(clubMembership.getShirtNumber())
+                .season(clubMembership.getSeason())
+                .positions(new HashSet<>(clubMembership.getPositions()))
+                .activeFrom(clubMembership.getActiveFrom())
+                .activeTo(clubMembership.getActiveTo())
+                .active(clubMembership.isActive())
                 .build();
     }
 }

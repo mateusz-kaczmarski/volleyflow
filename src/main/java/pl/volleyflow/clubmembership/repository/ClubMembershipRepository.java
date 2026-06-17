@@ -1,6 +1,7 @@
 package pl.volleyflow.clubmembership.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import pl.volleyflow.clubmembership.model.ClubMembership;
@@ -139,5 +140,19 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             """, nativeQuery = true)
     boolean canManageMemberships(@Param("clubExternalId") UUID clubExternalId,
                                  @Param("email") String email);
+
+    @Modifying
+    @Query(value = """
+            update app.club_membership cm
+            set active = false,
+                updated_at = now()
+            from app.club c
+            where c.id = cm.club_id
+              and c.external_id = :clubExternalId
+              and cm.external_id = :membershipExternalId
+              and c.active = true
+            """, nativeQuery = true)
+    int setActiveFalseByClubExternalIdAndExternalId(@Param("clubExternalId") UUID clubExternalId,
+                                                    @Param("membershipExternalId") UUID membershipExternalId);
 
 }

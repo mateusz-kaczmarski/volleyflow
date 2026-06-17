@@ -103,4 +103,20 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         return ClubMembershipMapper.mapToDto(membership);
     }
 
+    @Override
+    @Transactional
+    public void deleteMembership(UUID clubExternalId, UUID membershipExternalId, String userEmail) {
+        if (!clubMembershipRepository.canManageMemberships(clubExternalId, userEmail)) {
+            throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
+        }
+
+        int updatedRows = clubMembershipRepository.setActiveFalseByClubExternalIdAndExternalId(
+                clubExternalId,
+                membershipExternalId
+        );
+        if (updatedRows == 0) {
+            throw new ClubMembershipNotFoundException("Club membership not found");
+        }
+    }
+
 }

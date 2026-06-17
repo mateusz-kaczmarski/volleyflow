@@ -19,4 +19,6 @@ public interface ClubMembershipService {
                                        ClubMembershipRequest request,
                                        String userEmail);
 
+    void deleteMembership(UUID clubExternalId, UUID membershipExternalId, String userEmail);
+
 }

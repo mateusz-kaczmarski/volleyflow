@@ -50,4 +50,12 @@ public class ClubMembershipController {
         return clubMembershipService.updateMembership(clubExternalId, membershipExternalId, request, principal.getName());
     }
 
+    @DeleteMapping("/{clubExternalId}/{membershipExternalId}")
+    ResponseEntity<Void> deleteMembership(@PathVariable UUID clubExternalId,
+                                          @PathVariable UUID membershipExternalId,
+                                          Principal principal) {
+        clubMembershipService.deleteMembership(clubExternalId, membershipExternalId, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
+
 }

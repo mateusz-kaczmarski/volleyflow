@@ -29,11 +29,15 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
 
     @Override
     @Transactional
-    public ClubMembershipDto createMembership(ClubMembershipRequest request) {
+    public ClubMembershipDto createMembership(ClubMembershipRequest request, String userEmail) {
         log.info("Start create club membership {}", request);
 
         Club club = clubRepository.findByExternalId(request.clubExternalId())
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
+
+        if (!clubMembershipRepository.canManageMemberships(request.clubExternalId(), userEmail)) {
+            throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
+        }
 
         PersonProfile personProfile = ClubMembershipMapper.mapToPersonProfile(request);
         PersonProfile savedPersonProfile = personProfileRepository.save(personProfile);
@@ -78,6 +82,24 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                 .findByClubExternalIdAndExternalId(clubExternalId, membershipExternalId)
                 .orElseThrow(() -> new ClubMembershipNotFoundException("Club membership not found"));
 
+        return ClubMembershipMapper.mapToDto(membership);
+    }
+
+    @Override
+    @Transactional
+    public ClubMembershipDto updateMembership(UUID clubExternalId,
+                                              UUID membershipExternalId,
+                                              ClubMembershipRequest request,
+                                              String userEmail) {
+        if (!clubMembershipRepository.canManageMemberships(clubExternalId, userEmail)) {
+            throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
+        }
+
+        ClubMembership membership = clubMembershipRepository
+                .findByClubExternalIdAndExternalId(clubExternalId, membershipExternalId)
+                .orElseThrow(() -> new ClubMembershipNotFoundException("Club membership not found"));
+
+        ClubMembershipMapper.updateEntity(membership, request);
         return ClubMembershipMapper.mapToDto(membership);
     }
 

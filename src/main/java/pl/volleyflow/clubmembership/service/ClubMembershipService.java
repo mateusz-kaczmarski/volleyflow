@@ -8,10 +8,15 @@ import java.util.UUID;
 
 public interface ClubMembershipService {
 
-    ClubMembershipDto createMembership(ClubMembershipRequest request);
+    ClubMembershipDto createMembership(ClubMembershipRequest request, String userEmail);
 
     List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId, String userEmail, Boolean active);
 
     ClubMembershipDto getClubMembershipDetails(UUID clubExternalId, UUID memberExternalId, String userEmail);
+
+    ClubMembershipDto updateMembership(UUID clubExternalId,
+                                       UUID membershipExternalId,
+                                       ClubMembershipRequest request,
+                                       String userEmail);
 
 }

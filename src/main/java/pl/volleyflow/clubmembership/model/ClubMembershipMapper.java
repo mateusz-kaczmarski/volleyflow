@@ -25,6 +25,20 @@ public class ClubMembershipMapper {
                 .build();
     }
 
+    public static void updateEntity(ClubMembership clubMembership, ClubMembershipRequest request) {
+        clubMembership.setRole(request.role());
+        clubMembership.setShirtNumber(request.shirtNumber());
+        clubMembership.setSeason(request.season());
+        clubMembership.setPositions(request.positions() == null ? new HashSet<>() : new HashSet<>(request.positions()));
+        clubMembership.setActiveFrom(request.activeFrom());
+        clubMembership.setActiveTo(request.activeTo());
+
+        PersonProfile personProfile = clubMembership.getPersonProfile();
+        personProfile.setFirstName(request.firstName());
+        personProfile.setLastName(request.lastName());
+        personProfile.setDisplayName(request.displayName());
+    }
+
     public static ClubMembershipDto mapToDto(ClubMembership clubMembership) {
         return ClubMembershipDto.builder()
                 .externalId(clubMembership.getExternalId())

@@ -22,8 +22,10 @@ public class ClubMembershipController {
 
 
     @PostMapping()
-    ResponseEntity<ClubMembershipDto> createMembership(@RequestBody @Valid ClubMembershipRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(clubMembershipService.createMembership(request));
+    ResponseEntity<ClubMembershipDto> createMembership(@RequestBody @Valid ClubMembershipRequest request,
+                                                       Principal principal) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                clubMembershipService.createMembership(request, principal.getName()));
     }
 
     @GetMapping("/{clubExternalId}/players")
@@ -35,9 +37,17 @@ public class ClubMembershipController {
 
     @GetMapping("/{clubExternalId}/{membershipExternalId}")
     ClubMembershipDto getMembershipDetails(@PathVariable UUID clubExternalId,
-                                           @PathVariable UUID membershipExternalId,
-                                           Principal principal) {
+                                            @PathVariable UUID membershipExternalId,
+                                            Principal principal) {
         return clubMembershipService.getClubMembershipDetails(clubExternalId, membershipExternalId, principal.getName());
+    }
+
+    @PutMapping("/{clubExternalId}/{membershipExternalId}")
+    ClubMembershipDto updateMembership(@PathVariable UUID clubExternalId,
+                                       @PathVariable UUID membershipExternalId,
+                                       @RequestBody @Valid ClubMembershipRequest request,
+                                       Principal principal) {
+        return clubMembershipService.updateMembership(clubExternalId, membershipExternalId, request, principal.getName());
     }
 
 }

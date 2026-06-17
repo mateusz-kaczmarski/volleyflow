@@ -33,4 +33,11 @@ public class ClubMembershipController {
         return clubMembershipService.getPlayersByClub(clubExternalId, principal.getName(), active);
     }
 
+    @GetMapping("/{clubExternalId}/{membershipExternalId}")
+    ClubMembershipDto getMembershipDetails(@PathVariable UUID clubExternalId,
+                                           @PathVariable UUID membershipExternalId,
+                                           Principal principal) {
+        return clubMembershipService.getClubMembershipDetails(clubExternalId, membershipExternalId, principal.getName());
+    }
+
 }

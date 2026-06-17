@@ -9,6 +9,7 @@ import pl.volleyflow.club.model.ClubNotFoundException;
 import pl.volleyflow.club.repository.ClubRepository;
 import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
 import pl.volleyflow.clubmembership.model.*;
+import pl.volleyflow.clubmembership.model.exceptions.ClubMembershipNotFoundException;
 import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
 import pl.volleyflow.personprofile.model.PersonProfile;
 import pl.volleyflow.personprofile.repository.PersonProfileRepository;
@@ -48,8 +49,9 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     }
 
     @Override
-    public List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId, String email, Boolean active) {
-        if (!clubMembershipRepository.existsByClubExternalIdAndPersonProfileUserAccountEmail(clubExternalId, email)) {
+    @Transactional(readOnly = true)
+    public List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId, String userEmail, Boolean active) {
+        if (!clubMembershipRepository.existsByClubExternalIdAndPersonProfileUserAccountEmail(clubExternalId, userEmail)) {
             throw new ClubMembershipAccessDeniedException("You do not have access to this club");
         }
 
@@ -62,4 +64,21 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                 .map(ClubMembershipMapper::mapToDto)
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClubMembershipDto getClubMembershipDetails(UUID clubExternalId,
+                                                      UUID membershipExternalId,
+                                                      String userEmail) {
+        if (!clubMembershipRepository.existsByClubExternalIdAndPersonProfileUserAccountEmail(clubExternalId, userEmail)) {
+            throw new ClubMembershipAccessDeniedException("You do not have access to this club");
+        }
+
+        ClubMembership membership = clubMembershipRepository
+                .findByClubExternalIdAndExternalId(clubExternalId, membershipExternalId)
+                .orElseThrow(() -> new ClubMembershipNotFoundException("Club membership not found"));
+
+        return ClubMembershipMapper.mapToDto(membership);
+    }
+
 }

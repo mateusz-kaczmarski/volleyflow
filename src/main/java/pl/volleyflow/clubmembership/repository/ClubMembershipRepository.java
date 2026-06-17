@@ -22,12 +22,10 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
               and pp.last_name = :lastName
               and cm.season = :season
             """, nativeQuery = true)
-    boolean existsByClubExternalIdAndPersonProfileFirstNameAndPersonProfileLastNameAndSeason(
-            @Param("clubExternalId") UUID clubExternalId,
-            @Param("firstName") String firstName,
-            @Param("lastName") String lastName,
-            @Param("season") String season
-    );
+    boolean existsByClubExternalIdAndPersonProfileFirstNameAndPersonProfileLastNameAndSeason(@Param("clubExternalId") UUID clubExternalId,
+                                                                                             @Param("firstName") String firstName,
+                                                                                             @Param("lastName") String lastName,
+                                                                                             @Param("season") String season);
 
     @Query(value = """
             select count(*) > 0
@@ -38,10 +36,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             where c.external_id = :clubExternalId
               and ua.external_id = :userAccountExternalId
             """, nativeQuery = true)
-    boolean existsByClubExternalIdAndPersonProfileUserAccountExternalId(
-            @Param("clubExternalId") UUID clubExternalId,
-            @Param("userAccountExternalId") UUID userAccountExternalId
-    );
+    boolean existsByClubExternalIdAndPersonProfileUserAccountExternalId(@Param("clubExternalId") UUID clubExternalId,
+                                                                        @Param("userAccountExternalId") UUID userAccountExternalId);
 
     @Query(value = """
             select count(*) > 0
@@ -52,10 +48,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             where c.external_id = :clubExternalId
               and ua.email = :email
             """, nativeQuery = true)
-    boolean existsByClubExternalIdAndPersonProfileUserAccountEmail(
-            @Param("clubExternalId") UUID clubExternalId,
-            @Param("email") String email
-    );
+    boolean existsByClubExternalIdAndPersonProfileUserAccountEmail(@Param("clubExternalId") UUID clubExternalId,
+                                                                   @Param("email") String email);
 
     @Query(value = """
             select cm.*
@@ -66,9 +60,7 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             where ua.external_id = :userAccountExternalId
               and c.active = true
             """, nativeQuery = true)
-    List<ClubMembership> findAllByPersonProfileUserAccountExternalIdAndClubActiveTrue(
-            @Param("userAccountExternalId") UUID userAccountExternalId
-    );
+    List<ClubMembership> findAllByPersonProfileUserAccountExternalIdAndClubActiveTrue(@Param("userAccountExternalId") UUID userAccountExternalId);
 
     @Query(value = """
             select cm.*
@@ -106,10 +98,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
               and c.active = true
             limit 1
             """, nativeQuery = true)
-    Optional<String> findRoleByClubExternalIdAndUserEmail(
-            @Param("clubExternalId") UUID clubExternalId,
-            @Param("email") String email
-    );
+    Optional<String> findRoleByClubExternalIdAndUserEmail(@Param("clubExternalId") UUID clubExternalId,
+                                                          @Param("email") String email);
 
     @Query(value = """
             select case
@@ -123,5 +113,16 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
               and cm.role = 'OWNER'
             """, nativeQuery = true)
     boolean isOwnerClub(@Param("userId") long userId, @Param("clubId") long clubId);
+
+    @Query(value = """
+        select cm.*
+        from app.club_membership cm
+        join app.club c on c.id = cm.club_id
+        where c.external_id = :clubExternalId
+          and cm.external_id = :memberExternalId
+          and c.active = true
+        """, nativeQuery = true)
+    Optional<ClubMembership> findByClubExternalIdAndExternalId(@Param("clubExternalId") UUID clubExternalId,
+                                                               @Param("memberExternalId") UUID memberExternalId);
 
 }

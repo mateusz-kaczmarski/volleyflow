@@ -1,6 +1,7 @@
 package pl.volleyflow.club.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.volleyflow.club.model.ClubBasicDto;
@@ -23,8 +24,8 @@ public class ClubController {
 
     @PostMapping()
     ResponseEntity<ClubBasicDto> createClub(@RequestBody @Valid ClubRequest clubRequest,
-                                            Principal principal) {
-        return ResponseEntity.ok(clubService.createClub(clubRequest, principal.getName()));
+                                             Principal principal) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(clubService.createClub(clubRequest, principal.getName()));
     }
 
     @GetMapping("/user/{userExternalId}")

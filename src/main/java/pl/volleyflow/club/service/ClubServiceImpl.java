@@ -122,9 +122,6 @@ public class ClubServiceImpl implements ClubService {
 
     @Override
     public ClubDetailsDto getClubDetails(UUID clubExternalId, String userEmail) {
-        UserAccount userAccount = userAccountService.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
         Club club = clubRepository.findByExternalId(clubExternalId)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 

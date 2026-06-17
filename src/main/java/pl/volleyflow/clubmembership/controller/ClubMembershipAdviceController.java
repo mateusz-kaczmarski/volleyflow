@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pl.volleyflow.auth.controller.GlobalErrorResponse;
 import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
+import pl.volleyflow.clubmembership.model.exceptions.ClubMembershipNotFoundException;
 
 @RestControllerAdvice
 public class ClubMembershipAdviceController {
@@ -14,4 +15,10 @@ public class ClubMembershipAdviceController {
     public ResponseEntity<GlobalErrorResponse> handleClubMembershipAccessDenied(ClubMembershipAccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new GlobalErrorResponse(ex.getMessage()));
     }
+
+    @ExceptionHandler(ClubMembershipNotFoundException.class)
+    public ResponseEntity<GlobalErrorResponse> handleClubMembershipNotFoundException(ClubMembershipNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new GlobalErrorResponse(ex.getMessage()));
+    }
+
 }

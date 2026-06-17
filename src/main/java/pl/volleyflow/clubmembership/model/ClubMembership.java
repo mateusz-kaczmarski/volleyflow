@@ -79,6 +79,7 @@ public class ClubMembership {
         externalId = UUID.randomUUID();
         createdAt = Instant.now();
         updatedAt = Instant.now();
+        active = true;
     }
 
     @PreUpdate

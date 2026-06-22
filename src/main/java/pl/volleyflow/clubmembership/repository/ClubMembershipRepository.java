@@ -22,10 +22,10 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
               and pp.last_name = :lastName
               and cm.season = :season
             """, nativeQuery = true)
-    boolean existsByClubExternalIdAndPersonProfileFirstNameAndPersonProfileLastNameAndSeason(@Param("clubExternalId") UUID clubExternalId,
-                                                                                             @Param("firstName") String firstName,
-                                                                                             @Param("lastName") String lastName,
-                                                                                             @Param("season") String season);
+    boolean existsPlayerInClubSeason(@Param("clubExternalId") UUID clubExternalId,
+                                     @Param("firstName") String firstName,
+                                     @Param("lastName") String lastName,
+                                     @Param("season") String season);
 
     @Query(value = """
             select count(*) > 0
@@ -36,8 +36,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             where c.external_id = :clubExternalId
               and ua.external_id = :userAccountExternalId
             """, nativeQuery = true)
-    boolean existsByClubExternalIdAndPersonProfileUserAccountExternalId(@Param("clubExternalId") UUID clubExternalId,
-                                                                        @Param("userAccountExternalId") UUID userAccountExternalId);
+    boolean existsUserMembershipInClub(@Param("clubExternalId") UUID clubExternalId,
+                                       @Param("userAccountExternalId") UUID userAccountExternalId);
 
     @Query(value = """
             select count(*) > 0
@@ -48,8 +48,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             where c.external_id = :clubExternalId
               and ua.email = :email
             """, nativeQuery = true)
-    boolean existsByClubExternalIdAndPersonProfileUserAccountEmail(@Param("clubExternalId") UUID clubExternalId,
-                                                                   @Param("email") String email);
+    boolean isClubMember(@Param("clubExternalId") UUID clubExternalId,
+                         @Param("email") String email);
 
     @Query(value = """
             select cm.*
@@ -60,7 +60,7 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             where ua.external_id = :userAccountExternalId
               and c.active = true
             """, nativeQuery = true)
-    List<ClubMembership> findAllByPersonProfileUserAccountExternalIdAndClubActiveTrue(@Param("userAccountExternalId") UUID userAccountExternalId);
+    List<ClubMembership> findActiveClubMembershipsByUserExternalId(@Param("userAccountExternalId") UUID userAccountExternalId);
 
     @Query(value = """
             select cm.*
@@ -72,9 +72,9 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
               and c.active = true
             order by cm.shirt_number nulls last, cm.id
             """, nativeQuery = true)
-    List<ClubMembership> findAllByClubExternalIdAndRoleAndActiveFilter(@Param("clubExternalId") UUID clubExternalId,
-                                                                       @Param("role") String role,
-                                                                       @Param("active") Boolean active);
+    List<ClubMembership> findMembershipsByClubRoleAndActiveFilter(@Param("clubExternalId") UUID clubExternalId,
+                                                                  @Param("role") String role,
+                                                                  @Param("active") Boolean active);
 
     @Query(value = """
             select cm.*
@@ -86,7 +86,7 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
               and c.active = true
             order by cm.shirt_number nulls last, cm.id
             """, nativeQuery = true)
-    List<ClubMembership> findAllPlayersByClubExternalId(@Param("clubExternalId") UUID clubExternalId);
+    List<ClubMembership> findActivePlayersByClubExternalId(@Param("clubExternalId") UUID clubExternalId);
 
     @Query(value = """
             select cm.role
@@ -113,7 +113,7 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
               and cm.club_id = :clubId
               and cm.role = 'OWNER'
             """, nativeQuery = true)
-    boolean isOwnerClub(@Param("userId") long userId, @Param("clubId") long clubId);
+    boolean isClubOwner(@Param("userId") long userId, @Param("clubId") long clubId);
 
     @Query(value = """
         select cm.*
@@ -123,8 +123,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
           and cm.external_id = :memberExternalId
           and c.active = true
         """, nativeQuery = true)
-    Optional<ClubMembership> findByClubExternalIdAndExternalId(@Param("clubExternalId") UUID clubExternalId,
-                                                                @Param("memberExternalId") UUID memberExternalId);
+    Optional<ClubMembership> findMembershipByClubExternalIdAndMembershipExternalId(@Param("clubExternalId") UUID clubExternalId,
+                                                                                   @Param("memberExternalId") UUID memberExternalId);
 
     @Query(value = """
             select count(*) > 0
@@ -138,8 +138,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
               and cm.active = true
               and c.active = true
             """, nativeQuery = true)
-    boolean canManageMemberships(@Param("clubExternalId") UUID clubExternalId,
-                                 @Param("email") String email);
+    boolean canManageClubMemberships(@Param("clubExternalId") UUID clubExternalId,
+                                     @Param("email") String email);
 
     @Modifying
     @Query(value = """
@@ -152,7 +152,7 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
               and cm.external_id = :membershipExternalId
               and c.active = true
             """, nativeQuery = true)
-    int setActiveFalseByClubExternalIdAndExternalId(@Param("clubExternalId") UUID clubExternalId,
-                                                    @Param("membershipExternalId") UUID membershipExternalId);
+    int deactivateByClubExternalIdAndMembershipExternalId(@Param("clubExternalId") UUID clubExternalId,
+                                                          @Param("membershipExternalId") UUID membershipExternalId);
 
 }

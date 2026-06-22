@@ -32,10 +32,10 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     public ClubMembershipDto createMembership(ClubMembershipCreateRequest request, String userEmail) {
         log.info("Start create club membership {}", request);
 
-        Club club = clubRepository.findByExternalId(request.clubExternalId())
+        Club club = clubRepository.findActiveByExternalId(request.clubExternalId())
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
-        if (!clubMembershipRepository.canManageMemberships(request.clubExternalId(), userEmail)) {
+        if (!clubMembershipRepository.canManageClubMemberships(request.clubExternalId(), userEmail)) {
             throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
         }
 
@@ -55,11 +55,11 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     @Override
     @Transactional(readOnly = true)
     public List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId, String userEmail, Boolean active) {
-        if (!clubMembershipRepository.existsByClubExternalIdAndPersonProfileUserAccountEmail(clubExternalId, userEmail)) {
+        if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail)) {
             throw new ClubMembershipAccessDeniedException("You do not have access to this club");
         }
 
-        return clubMembershipRepository.findAllByClubExternalIdAndRoleAndActiveFilter(
+        return clubMembershipRepository.findMembershipsByClubRoleAndActiveFilter(
                         clubExternalId,
                         ClubMembershipRole.PLAYER.name(),
                         active
@@ -74,12 +74,12 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     public ClubMembershipDto getClubMembershipDetails(UUID clubExternalId,
                                                       UUID membershipExternalId,
                                                       String userEmail) {
-        if (!clubMembershipRepository.existsByClubExternalIdAndPersonProfileUserAccountEmail(clubExternalId, userEmail)) {
+        if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail)) {
             throw new ClubMembershipAccessDeniedException("You do not have access to this club");
         }
 
         ClubMembership membership = clubMembershipRepository
-                .findByClubExternalIdAndExternalId(clubExternalId, membershipExternalId)
+                .findMembershipByClubExternalIdAndMembershipExternalId(clubExternalId, membershipExternalId)
                 .orElseThrow(() -> new ClubMembershipNotFoundException("Club membership not found"));
 
         return ClubMembershipMapper.mapToDto(membership);
@@ -91,12 +91,12 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                                               UUID membershipExternalId,
                                               ClubMembershipUpdateRequest request,
                                               String userEmail) {
-        if (!clubMembershipRepository.canManageMemberships(clubExternalId, userEmail)) {
+        if (!clubMembershipRepository.canManageClubMemberships(clubExternalId, userEmail)) {
             throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
         }
 
         ClubMembership membership = clubMembershipRepository
-                .findByClubExternalIdAndExternalId(clubExternalId, membershipExternalId)
+                .findMembershipByClubExternalIdAndMembershipExternalId(clubExternalId, membershipExternalId)
                 .orElseThrow(() -> new ClubMembershipNotFoundException("Club membership not found"));
 
         ClubMembershipMapper.updateEntity(membership, request);
@@ -106,11 +106,11 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     @Override
     @Transactional
     public void deleteMembership(UUID clubExternalId, UUID membershipExternalId, String userEmail) {
-        if (!clubMembershipRepository.canManageMemberships(clubExternalId, userEmail)) {
+        if (!clubMembershipRepository.canManageClubMemberships(clubExternalId, userEmail)) {
             throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
         }
 
-        int updatedRows = clubMembershipRepository.setActiveFalseByClubExternalIdAndExternalId(
+        int updatedRows = clubMembershipRepository.deactivateByClubExternalIdAndMembershipExternalId(
                 clubExternalId,
                 membershipExternalId
         );

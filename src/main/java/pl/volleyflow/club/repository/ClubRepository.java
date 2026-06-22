@@ -20,7 +20,7 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
             where c.external_id = :externalId
               and c.active = true
             """, nativeQuery = true)
-    Optional<Club> findByExternalId(@Param("externalId") UUID externalId);
+    Optional<Club> findActiveByExternalId(@Param("externalId") UUID externalId);
 
     Optional<Club> findByNameAndActiveTrue(String name);
 
@@ -32,6 +32,6 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
                 updated_at = now()
             where id = :clubId
             """, nativeQuery = true)
-    void setActiveFalseById(@Param("clubId") long clubId);
+    void deactivateById(@Param("clubId") long clubId);
 
 }

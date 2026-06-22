@@ -55,7 +55,7 @@ public class ClubServiceImpl implements ClubService {
 
     @Override
     public List<ClubBasicDto> getClubsByUser(UUID userExternalId) {
-        return clubMembershipRepository.findAllByPersonProfileUserAccountExternalIdAndClubActiveTrue(userExternalId).stream()
+        return clubMembershipRepository.findActiveClubMembershipsByUserExternalId(userExternalId).stream()
                 .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
     }
@@ -64,7 +64,7 @@ public class ClubServiceImpl implements ClubService {
     public List<ClubBasicDto> getMyClubs(String userEmail) {
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return clubMembershipRepository.findAllByPersonProfileUserAccountExternalIdAndClubActiveTrue(userAccount.getExternalId()).stream()
+        return clubMembershipRepository.findActiveClubMembershipsByUserExternalId(userAccount.getExternalId()).stream()
                 .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
     }
@@ -75,10 +75,10 @@ public class ClubServiceImpl implements ClubService {
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Club club = clubRepository.findByExternalId(clubExternalId)
+        Club club = clubRepository.findActiveByExternalId(clubExternalId)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
-        if (!clubMembershipRepository.isOwnerClub(userAccount.getId(), club.getId())) {
+        if (!clubMembershipRepository.isClubOwner(userAccount.getId(), club.getId())) {
             throw new UserNoPermission("User has no permission to edit this club");
         }
 
@@ -102,36 +102,36 @@ public class ClubServiceImpl implements ClubService {
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Club club = clubRepository.findByExternalId(clubExternalId)
+        Club club = clubRepository.findActiveByExternalId(clubExternalId)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
-        if (!clubMembershipRepository.isOwnerClub(userAccount.getId(), club.getId())) {
+        if (!clubMembershipRepository.isClubOwner(userAccount.getId(), club.getId())) {
             throw new UserNoPermission("User has no permission to edit this club");
         }
 
-        clubRepository.setActiveFalseById(club.getId());
+        clubRepository.deactivateById(club.getId());
         log.info("Change status active for false for club {}", club.getName());
     }
 
     @Override
     public ClubBasicDto getClub(UUID clubExternalId) {
-        return clubRepository.findByExternalId(clubExternalId)
+        return clubRepository.findActiveByExternalId(clubExternalId)
                 .map(ClubMapper::mapToDto)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
     }
 
     @Override
     public ClubDetailsDto getClubDetails(UUID clubExternalId, String userEmail) {
-        Club club = clubRepository.findByExternalId(clubExternalId)
+        Club club = clubRepository.findActiveByExternalId(clubExternalId)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
-        if (!clubMembershipRepository.existsByClubExternalIdAndPersonProfileUserAccountEmail(clubExternalId, userEmail)) {
+        if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail)) {
             throw new UserNoPermission("User has no permission to watch this club");
         }
 
         String userRole = clubMembershipRepository.findRoleByClubExternalIdAndUserEmail(clubExternalId, userEmail)
                 .orElse(null);
-        List<ClubMemberDto> members = clubMembershipRepository.findAllPlayersByClubExternalId(clubExternalId)
+        List<ClubMemberDto> members = clubMembershipRepository.findActivePlayersByClubExternalId(clubExternalId)
                 .stream()
                 .map(ClubMembershipMapper::mapToClubMemberDto)
                 .toList();
@@ -144,7 +144,7 @@ public class ClubServiceImpl implements ClubService {
         PersonProfile personProfile = personProfileService.findByUserAccount(userAccount)
                 .orElseThrow(() -> new UserNotFoundException("Person profile not found for user"));
 
-        if (clubMembershipRepository.existsByClubExternalIdAndPersonProfileUserAccountExternalId(
+        if (clubMembershipRepository.existsUserMembershipInClub(
                 club.getExternalId(),
                 userAccount.getExternalId()
         )) {

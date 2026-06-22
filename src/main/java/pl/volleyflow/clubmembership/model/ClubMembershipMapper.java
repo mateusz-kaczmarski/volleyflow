@@ -6,7 +6,7 @@ import java.util.HashSet;
 
 public class ClubMembershipMapper {
 
-    public static PersonProfile mapToPersonProfile(ClubMembershipRequest request) {
+    public static PersonProfile mapToPersonProfile(ClubMembershipCreateRequest request) {
         return PersonProfile.builder()
                 .firstName(request.firstName())
                 .lastName(request.lastName())
@@ -14,7 +14,7 @@ public class ClubMembershipMapper {
                 .build();
     }
 
-    public static ClubMembership mapToEntity(ClubMembershipRequest request) {
+    public static ClubMembership mapToEntity(ClubMembershipCreateRequest request) {
         return ClubMembership.builder()
                 .role(request.role())
                 .shirtNumber(request.shirtNumber())

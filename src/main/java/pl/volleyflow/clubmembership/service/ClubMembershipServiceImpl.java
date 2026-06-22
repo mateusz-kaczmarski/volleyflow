@@ -29,7 +29,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
 
     @Override
     @Transactional
-    public ClubMembershipDto createMembership(ClubMembershipRequest request, String userEmail) {
+    public ClubMembershipDto createMembership(ClubMembershipCreateRequest request, String userEmail) {
         log.info("Start create club membership {}", request);
 
         Club club = clubRepository.findByExternalId(request.clubExternalId())

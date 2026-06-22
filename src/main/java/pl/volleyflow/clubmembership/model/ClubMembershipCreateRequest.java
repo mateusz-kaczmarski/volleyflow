@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
 
-public record ClubMembershipRequest(
+public record ClubMembershipCreateRequest(
         @NotNull(message = "club externalId cannot be null")
         UUID clubExternalId,
 

@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.volleyflow.clubmembership.model.ClubMembershipDto;
-import pl.volleyflow.clubmembership.model.ClubMembershipRequest;
+import pl.volleyflow.clubmembership.model.ClubMembershipCreateRequest;
 import pl.volleyflow.clubmembership.model.ClubMembershipUpdateRequest;
 import pl.volleyflow.clubmembership.service.ClubMembershipService;
 
@@ -23,7 +23,7 @@ public class ClubMembershipController {
 
 
     @PostMapping()
-    ResponseEntity<ClubMembershipDto> createMembership(@RequestBody @Valid ClubMembershipRequest request,
+    ResponseEntity<ClubMembershipDto> createMembership(@RequestBody @Valid ClubMembershipCreateRequest request,
                                                        Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 clubMembershipService.createMembership(request, principal.getName()));

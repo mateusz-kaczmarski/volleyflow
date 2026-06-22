@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.volleyflow.clubmembership.model.ClubMembershipDto;
 import pl.volleyflow.clubmembership.model.ClubMembershipRequest;
+import pl.volleyflow.clubmembership.model.ClubMembershipUpdateRequest;
 import pl.volleyflow.clubmembership.service.ClubMembershipService;
 
 import javax.validation.Valid;
@@ -45,7 +46,7 @@ public class ClubMembershipController {
     @PutMapping("/{clubExternalId}/{membershipExternalId}")
     ClubMembershipDto updateMembership(@PathVariable UUID clubExternalId,
                                        @PathVariable UUID membershipExternalId,
-                                       @RequestBody @Valid ClubMembershipRequest request,
+                                       @RequestBody @Valid ClubMembershipUpdateRequest request,
                                        Principal principal) {
         return clubMembershipService.updateMembership(clubExternalId, membershipExternalId, request, principal.getName());
     }

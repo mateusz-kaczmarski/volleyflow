@@ -89,7 +89,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     @Transactional
     public ClubMembershipDto updateMembership(UUID clubExternalId,
                                               UUID membershipExternalId,
-                                              ClubMembershipRequest request,
+                                              ClubMembershipUpdateRequest request,
                                               String userEmail) {
         if (!clubMembershipRepository.canManageMemberships(clubExternalId, userEmail)) {
             throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");

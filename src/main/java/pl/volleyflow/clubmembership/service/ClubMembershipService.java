@@ -2,6 +2,7 @@ package pl.volleyflow.clubmembership.service;
 
 import pl.volleyflow.clubmembership.model.ClubMembershipDto;
 import pl.volleyflow.clubmembership.model.ClubMembershipRequest;
+import pl.volleyflow.clubmembership.model.ClubMembershipUpdateRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +17,7 @@ public interface ClubMembershipService {
 
     ClubMembershipDto updateMembership(UUID clubExternalId,
                                        UUID membershipExternalId,
-                                       ClubMembershipRequest request,
+                                       ClubMembershipUpdateRequest request,
                                        String userEmail);
 
     void deleteMembership(UUID clubExternalId, UUID membershipExternalId, String userEmail);

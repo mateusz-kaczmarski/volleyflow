@@ -25,7 +25,7 @@ public class ClubMembershipMapper {
                 .build();
     }
 
-    public static void updateEntity(ClubMembership clubMembership, ClubMembershipRequest request) {
+    public static void updateEntity(ClubMembership clubMembership, ClubMembershipUpdateRequest request) {
         clubMembership.setRole(request.role());
         clubMembership.setShirtNumber(request.shirtNumber());
         clubMembership.setSeason(request.season());

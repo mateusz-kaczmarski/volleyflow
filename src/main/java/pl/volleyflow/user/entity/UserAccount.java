@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_account", schema = "app")
+@Table(name = "user_account")
 @Getter
 @Setter
 @NoArgsConstructor

@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "club_membership", schema = "app")
+@Table(name = "club_membership")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -47,7 +47,6 @@ public class ClubMembership {
     @Enumerated(EnumType.STRING)
     @CollectionTable(
             name = "club_membership_position",
-            schema = "app",
             joinColumns = @JoinColumn(name = "club_membership_id")
     )
     @Column(name = "position", nullable = false, length = 30)

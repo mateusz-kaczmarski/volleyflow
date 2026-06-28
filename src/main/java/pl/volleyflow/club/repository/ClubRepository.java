@@ -16,7 +16,7 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
 
     @Query(value = """
             select *
-            from app.club c
+            from club c
             where c.external_id = :externalId
               and c.active = true
             """, nativeQuery = true)
@@ -27,7 +27,7 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
     @Modifying
     @Transactional
     @Query(value = """
-            update app.club
+            update club
             set active = false,
                 updated_at = now()
             where id = :clubId

@@ -14,9 +14,9 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
 
     @Query(value = """
             select count(*) > 0
-            from app.club_membership cm
-            join app.club c on c.id = cm.club_id
-            join app.person_profile pp on pp.id = cm.person_profile_id
+            from club_membership cm
+            join club c on c.id = cm.club_id
+            join person_profile pp on pp.id = cm.person_profile_id
             where c.external_id = :clubExternalId
               and pp.first_name = :firstName
               and pp.last_name = :lastName
@@ -27,10 +27,10 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
 
     @Query(value = """
             select count(*) > 0
-            from app.club_membership cm
-            join app.club c on c.id = cm.club_id
-            join app.person_profile pp on pp.id = cm.person_profile_id
-            join app.user_account ua on ua.id = pp.user_account_id
+            from club_membership cm
+            join club c on c.id = cm.club_id
+            join person_profile pp on pp.id = cm.person_profile_id
+            join user_account ua on ua.id = pp.user_account_id
             where c.external_id = :clubExternalId
               and ua.external_id = :userAccountExternalId
             """, nativeQuery = true)
@@ -39,10 +39,10 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
 
     @Query(value = """
             select count(*) > 0
-            from app.club_membership cm
-            join app.club c on c.id = cm.club_id
-            join app.person_profile pp on pp.id = cm.person_profile_id
-            join app.user_account ua on ua.id = pp.user_account_id
+            from club_membership cm
+            join club c on c.id = cm.club_id
+            join person_profile pp on pp.id = cm.person_profile_id
+            join user_account ua on ua.id = pp.user_account_id
             where c.external_id = :clubExternalId
               and ua.email = :email
             """, nativeQuery = true)
@@ -51,10 +51,10 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
 
     @Query(value = """
             select cm.*
-            from app.club_membership cm
-            join app.club c on c.id = cm.club_id
-            join app.person_profile pp on pp.id = cm.person_profile_id
-            join app.user_account ua on ua.id = pp.user_account_id
+            from club_membership cm
+            join club c on c.id = cm.club_id
+            join person_profile pp on pp.id = cm.person_profile_id
+            join user_account ua on ua.id = pp.user_account_id
             where ua.external_id = :userAccountExternalId
               and c.active = true
             """, nativeQuery = true)
@@ -62,8 +62,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
 
     @Query(value = """
             select cm.*
-            from app.club_membership cm
-            join app.club c on c.id = cm.club_id
+            from club_membership cm
+            join club c on c.id = cm.club_id
             where c.external_id = :clubExternalId
               and cm.role = :role
               and (:active is null or cm.active = :active)
@@ -76,8 +76,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
 
     @Query(value = """
             select cm.*
-            from app.club_membership cm
-            join app.club c on c.id = cm.club_id
+            from club_membership cm
+            join club c on c.id = cm.club_id
             where c.external_id = :clubExternalId
               and cm.role = 'PLAYER'
               and cm.active = true
@@ -88,10 +88,10 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
 
     @Query(value = """
             select cm.role
-            from app.club_membership cm
-            join app.club c on c.id = cm.club_id
-            join app.person_profile pp on pp.id = cm.person_profile_id
-            join app.user_account ua on ua.id = pp.user_account_id
+            from club_membership cm
+            join club c on c.id = cm.club_id
+            join person_profile pp on pp.id = cm.person_profile_id
+            join user_account ua on ua.id = pp.user_account_id
             where c.external_id = :clubExternalId
               and ua.email = :email
               and c.active = true
@@ -105,8 +105,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
                      when count(*) > 0 then true
                      else false
                    end
-            from app.club_membership cm
-            join app.person_profile pp on pp.id = cm.person_profile_id
+            from club_membership cm
+            join person_profile pp on pp.id = cm.person_profile_id
             where pp.user_account_id = :userId
               and cm.club_id = :clubId
               and cm.role = 'OWNER'
@@ -115,8 +115,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
 
     @Query(value = """
         select cm.*
-        from app.club_membership cm
-        join app.club c on c.id = cm.club_id
+        from club_membership cm
+        join club c on c.id = cm.club_id
         where c.external_id = :clubExternalId
           and cm.external_id = :memberExternalId
           and c.active = true
@@ -126,10 +126,10 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
 
     @Query(value = """
             select count(*) > 0
-            from app.club_membership cm
-            join app.club c on c.id = cm.club_id
-            join app.person_profile pp on pp.id = cm.person_profile_id
-            join app.user_account ua on ua.id = pp.user_account_id
+            from club_membership cm
+            join club c on c.id = cm.club_id
+            join person_profile pp on pp.id = cm.person_profile_id
+            join user_account ua on ua.id = pp.user_account_id
             where c.external_id = :clubExternalId
               and ua.email = :email
               and cm.role in ('OWNER', 'TRAINER')
@@ -141,10 +141,10 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
 
     @Modifying
     @Query(value = """
-            update app.club_membership cm
+            update club_membership cm
             set active = false,
                 updated_at = now()
-            from app.club c
+            from club c
             where c.id = cm.club_id
               and c.external_id = :clubExternalId
               and cm.external_id = :membershipExternalId

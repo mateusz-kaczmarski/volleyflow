@@ -20,12 +20,10 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             where c.external_id = :clubExternalId
               and pp.first_name = :firstName
               and pp.last_name = :lastName
-              and cm.season = :season
             """, nativeQuery = true)
-    boolean existsPlayerInClubSeason(@Param("clubExternalId") UUID clubExternalId,
-                                     @Param("firstName") String firstName,
-                                     @Param("lastName") String lastName,
-                                     @Param("season") String season);
+    boolean existsPlayerInClub(@Param("clubExternalId") UUID clubExternalId,
+                               @Param("firstName") String firstName,
+                               @Param("lastName") String lastName);
 
     @Query(value = """
             select count(*) > 0
@@ -73,8 +71,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             order by cm.shirt_number nulls last, cm.id
             """, nativeQuery = true)
     List<ClubMembership> findMembershipsByClubRoleAndActiveFilter(@Param("clubExternalId") UUID clubExternalId,
-                                                                  @Param("role") String role,
-                                                                  @Param("active") Boolean active);
+                                                                   @Param("role") String role,
+                                                                   @Param("active") Boolean active);
 
     @Query(value = """
             select cm.*

@@ -31,8 +31,8 @@ public class ClubMembershipController {
 
     @GetMapping("/{clubExternalId}/players")
     List<ClubMembershipDto> getPlayersByClub(@PathVariable UUID clubExternalId,
-                                             @RequestParam(required = false) Boolean active,
-                                             Principal principal) {
+                                              @RequestParam(required = false) Boolean active,
+                                              Principal principal) {
         return clubMembershipService.getPlayersByClub(clubExternalId, principal.getName(), active);
     }
 

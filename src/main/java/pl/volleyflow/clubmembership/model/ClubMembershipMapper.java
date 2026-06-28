@@ -18,7 +18,6 @@ public class ClubMembershipMapper {
         return ClubMembership.builder()
                 .role(request.role())
                 .shirtNumber(request.shirtNumber())
-                .season(request.season())
                 .positions(request.positions() == null ? new HashSet<>() : new HashSet<>(request.positions()))
                 .activeFrom(request.activeFrom())
                 .activeTo(request.activeTo())
@@ -28,7 +27,6 @@ public class ClubMembershipMapper {
     public static void updateEntity(ClubMembership clubMembership, ClubMembershipUpdateRequest request) {
         clubMembership.setRole(request.role());
         clubMembership.setShirtNumber(request.shirtNumber());
-        clubMembership.setSeason(request.season());
         clubMembership.setPositions(request.positions() == null ? new HashSet<>() : new HashSet<>(request.positions()));
         clubMembership.setActiveFrom(request.activeFrom());
         clubMembership.setActiveTo(request.activeTo());
@@ -49,7 +47,6 @@ public class ClubMembershipMapper {
                 .lastName(clubMembership.getPersonProfile().getLastName())
                 .displayName(clubMembership.getPersonProfile().getDisplayName())
                 .shirtNumber(clubMembership.getShirtNumber())
-                .season(clubMembership.getSeason())
                 .positions(new HashSet<>(clubMembership.getPositions()))
                 .build();
     }
@@ -63,7 +60,6 @@ public class ClubMembershipMapper {
                 .lastName(clubMembership.getPersonProfile().getLastName())
                 .displayName(clubMembership.getPersonProfile().getDisplayName())
                 .shirtNumber(clubMembership.getShirtNumber())
-                .season(clubMembership.getSeason())
                 .positions(new HashSet<>(clubMembership.getPositions()))
                 .activeFrom(clubMembership.getActiveFrom())
                 .activeTo(clubMembership.getActiveTo())

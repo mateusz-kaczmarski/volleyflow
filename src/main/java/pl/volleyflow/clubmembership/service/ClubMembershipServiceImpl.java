@@ -54,7 +54,9 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId, String userEmail, Boolean active) {
+    public List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId,
+                                                     String userEmail,
+                                                     Boolean active) {
         if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail)) {
             throw new ClubMembershipAccessDeniedException("You do not have access to this club");
         }

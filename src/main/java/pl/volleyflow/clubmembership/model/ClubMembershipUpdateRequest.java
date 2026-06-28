@@ -23,10 +23,6 @@ public record ClubMembershipUpdateRequest(
         @Max(value = 99, message = "shirt number must be less than 100")
         Integer shirtNumber,
 
-        @NotBlank(message = "season cannot be blank")
-        @Size(max = 20, message = "season cannot exceed 20 characters")
-        String season,
-
         @NotEmpty(message = "positions cannot be empty")
         Set<MemberPosition> positions,
 

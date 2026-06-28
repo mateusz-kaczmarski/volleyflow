@@ -15,7 +15,6 @@ public record ClubMemberDto(
         String lastName,
         String displayName,
         Integer shirtNumber,
-        String season,
         Set<MemberPosition> positions,
         LocalDate activeFrom,
         LocalDate activeTo,

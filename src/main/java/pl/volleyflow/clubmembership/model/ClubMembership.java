@@ -42,9 +42,6 @@ public class ClubMembership {
     @Column(name = "shirt_number")
     private Integer shirtNumber;
 
-    @Column(length = 20)
-    private String season;
-
     @Builder.Default
     @ElementCollection(targetClass = MemberPosition.class)
     @Enumerated(EnumType.STRING)

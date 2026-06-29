@@ -48,6 +48,9 @@ public class ClubMembershipMapper {
                 .displayName(clubMembership.getPersonProfile().getDisplayName())
                 .shirtNumber(clubMembership.getShirtNumber())
                 .positions(new HashSet<>(clubMembership.getPositions()))
+                .activeFrom(clubMembership.getActiveFrom())
+                .activeTo(clubMembership.getActiveTo())
+                .active(clubMembership.isActive())
                 .build();
     }
 

@@ -36,6 +36,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         Club club = clubRepository.findActiveByExternalId(request.clubExternalId())
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
+        validateCanManageClubMemberships(request.clubExternalId(), userEmail);
         validateCreateMembership(request);
 
         PersonProfile personProfile = ClubMembershipMapper.mapToPersonProfile(request);
@@ -56,9 +57,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     public List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId,
                                                     String userEmail,
                                                     Boolean active) {
-        if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail)) {
-            throw new ClubMembershipAccessDeniedException("You do not have access to this club");
-        }
+        requireClubMember(clubExternalId, userEmail);
 
         return clubMembershipRepository.findMembershipsByClubRoleAndActiveFilter(
                         clubExternalId,
@@ -75,9 +74,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     public ClubMembershipDto getClubMembershipDetails(UUID clubExternalId,
                                                       UUID membershipExternalId,
                                                       String userEmail) {
-        if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail)) {
-            throw new ClubMembershipAccessDeniedException("You do not have access to this club");
-        }
+        requireClubMember(clubExternalId, userEmail);
 
         ClubMembership membership = clubMembershipRepository
                 .findMembershipByClubExternalIdAndMembershipExternalId(clubExternalId, membershipExternalId)
@@ -92,9 +89,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                                               UUID membershipExternalId,
                                               ClubMembershipUpdateRequest request,
                                               String userEmail) {
-        if (!clubMembershipRepository.canManageClubMemberships(clubExternalId, userEmail)) {
-            throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
-        }
+        validateCanManageClubMemberships(clubExternalId, userEmail);
 
         ClubMembership membership = clubMembershipRepository
                 .findMembershipByClubExternalIdAndMembershipExternalId(clubExternalId, membershipExternalId)
@@ -109,9 +104,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     @Override
     @Transactional
     public void deleteMembership(UUID clubExternalId, UUID membershipExternalId, String userEmail) {
-        if (!clubMembershipRepository.canManageClubMemberships(clubExternalId, userEmail)) {
-            throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
-        }
+        validateCanManageClubMemberships(clubExternalId, userEmail);
 
         int updatedRows = clubMembershipRepository.deactivateByClubExternalIdAndMembershipExternalId(
                 clubExternalId,
@@ -119,6 +112,18 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         );
         if (updatedRows == 0) {
             throw new ClubMembershipNotFoundException("Club membership not found");
+        }
+    }
+
+    private void requireClubMember(UUID clubExternalId, String userEmail) {
+        if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail)) {
+            throw new ClubMembershipAccessDeniedException("You do not have access to this club");
+        }
+    }
+
+    private void validateCanManageClubMemberships(UUID clubExternalId, String userEmail) {
+        if (!clubMembershipRepository.canManageClubMemberships(clubExternalId, userEmail)) {
+            throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
         }
     }
 

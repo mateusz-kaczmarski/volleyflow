@@ -20,10 +20,55 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             where c.external_id = :clubExternalId
               and pp.first_name = :firstName
               and pp.last_name = :lastName
+              and cm.active = true
+              and c.active = true
             """, nativeQuery = true)
-    boolean existsPlayerInClub(@Param("clubExternalId") UUID clubExternalId,
-                               @Param("firstName") String firstName,
-                               @Param("lastName") String lastName);
+    boolean existsActivePlayerInClub(@Param("clubExternalId") UUID clubExternalId,
+                                     @Param("firstName") String firstName,
+                                     @Param("lastName") String lastName);
+
+    @Query(value = """
+            select count(*) > 0
+            from club_membership cm
+            join club c on c.id = cm.club_id
+            join person_profile pp on pp.id = cm.person_profile_id
+            where c.external_id = :clubExternalId
+              and pp.first_name = :firstName
+              and pp.last_name = :lastName
+              and cm.external_id <> :membershipExternalId
+              and cm.active = true
+              and c.active = true
+            """, nativeQuery = true)
+    boolean existsActivePlayerInClubExcludingMembership(@Param("clubExternalId") UUID clubExternalId,
+                                                        @Param("firstName") String firstName,
+                                                        @Param("lastName") String lastName,
+                                                        @Param("membershipExternalId") UUID membershipExternalId);
+
+    @Query(value = """
+            select count(*) > 0
+            from club_membership cm
+            join club c on c.id = cm.club_id
+            where c.external_id = :clubExternalId
+              and cm.shirt_number = :shirtNumber
+              and cm.active = true
+              and c.active = true
+            """, nativeQuery = true)
+    boolean existsActiveShirtNumberInClub(@Param("clubExternalId") UUID clubExternalId,
+                                          @Param("shirtNumber") Integer shirtNumber);
+
+    @Query(value = """
+            select count(*) > 0
+            from club_membership cm
+            join club c on c.id = cm.club_id
+            where c.external_id = :clubExternalId
+              and cm.shirt_number = :shirtNumber
+              and cm.external_id <> :membershipExternalId
+              and cm.active = true
+              and c.active = true
+            """, nativeQuery = true)
+    boolean existsActiveShirtNumberInClubExcludingMembership(@Param("clubExternalId") UUID clubExternalId,
+                                                             @Param("shirtNumber") Integer shirtNumber,
+                                                             @Param("membershipExternalId") UUID membershipExternalId);
 
     @Query(value = """
             select count(*) > 0

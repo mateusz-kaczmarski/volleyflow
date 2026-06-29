@@ -9,6 +9,7 @@ import pl.volleyflow.club.model.ClubNotFoundException;
 import pl.volleyflow.club.repository.ClubRepository;
 import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
 import pl.volleyflow.clubmembership.model.*;
+import pl.volleyflow.clubmembership.model.exceptions.ClubMembershipAlreadyExistsException;
 import pl.volleyflow.clubmembership.model.exceptions.ClubMembershipNotFoundException;
 import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
 import pl.volleyflow.personprofile.model.PersonProfile;
@@ -35,9 +36,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         Club club = clubRepository.findActiveByExternalId(request.clubExternalId())
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
-        if (!clubMembershipRepository.canManageClubMemberships(request.clubExternalId(), userEmail)) {
-            throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
-        }
+        validateCreateMembership(request);
 
         PersonProfile personProfile = ClubMembershipMapper.mapToPersonProfile(request);
         PersonProfile savedPersonProfile = personProfileRepository.save(personProfile);
@@ -55,8 +54,8 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     @Override
     @Transactional(readOnly = true)
     public List<ClubMembershipDto> getPlayersByClub(UUID clubExternalId,
-                                                     String userEmail,
-                                                     Boolean active) {
+                                                    String userEmail,
+                                                    Boolean active) {
         if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail)) {
             throw new ClubMembershipAccessDeniedException("You do not have access to this club");
         }
@@ -101,6 +100,8 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                 .findMembershipByClubExternalIdAndMembershipExternalId(clubExternalId, membershipExternalId)
                 .orElseThrow(() -> new ClubMembershipNotFoundException("Club membership not found"));
 
+        validateUpdateMembership(clubExternalId, membershipExternalId, request);
+
         ClubMembershipMapper.updateEntity(membership, request);
         return ClubMembershipMapper.mapToDto(membership);
     }
@@ -118,6 +119,42 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         );
         if (updatedRows == 0) {
             throw new ClubMembershipNotFoundException("Club membership not found");
+        }
+    }
+
+    private void validateCreateMembership(ClubMembershipCreateRequest request) {
+        if (clubMembershipRepository.existsActivePlayerInClub(
+                request.clubExternalId(),
+                request.firstName(),
+                request.lastName())) {
+            throw new ClubMembershipAlreadyExistsException("Player already exists in this club");
+        }
+
+        if (request.shirtNumber() != null && clubMembershipRepository.existsActiveShirtNumberInClub(
+                request.clubExternalId(),
+                request.shirtNumber())) {
+            throw new ClubMembershipAlreadyExistsException("Shirt number already exists in this club");
+        }
+    }
+
+    private void validateUpdateMembership(
+            UUID clubExternalId,
+            UUID membershipExternalId,
+            ClubMembershipUpdateRequest request) {
+        if (clubMembershipRepository.existsActivePlayerInClubExcludingMembership(
+                clubExternalId,
+                request.firstName(),
+                request.lastName(),
+                membershipExternalId)) {
+            throw new ClubMembershipAlreadyExistsException("Player already exists in this club");
+        }
+
+        if (request.shirtNumber() != null
+                && clubMembershipRepository.existsActiveShirtNumberInClubExcludingMembership(
+                clubExternalId,
+                request.shirtNumber(),
+                membershipExternalId)) {
+            throw new ClubMembershipAlreadyExistsException("Shirt number already exists in this club");
         }
     }
 

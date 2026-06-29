@@ -27,7 +27,7 @@ public class ClubMembershipAdviceController {
     @ExceptionHandler(ClubMembershipAlreadyExistsException.class)
     public ResponseEntity<GlobalErrorResponse> handleClubMembershipAlreadyExistsException(
             ClubMembershipAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new GlobalErrorResponse(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new GlobalErrorResponse(ex.getMessage()));
     }
 
 }

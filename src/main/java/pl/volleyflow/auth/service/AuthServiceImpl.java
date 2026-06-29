@@ -18,6 +18,8 @@ import pl.volleyflow.user.model.UserAccountRequest;
 import pl.volleyflow.user.model.UserRegisterRequest;
 import pl.volleyflow.user.service.UserAccountService;
 
+import java.util.Locale;
+
 @Service("authService")
 @RequiredArgsConstructor
 @Log4j2
@@ -47,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(UserLoginRequest request) {
-        UserAccount userAccount = userAccountService.findByEmail(request.email())
+        UserAccount userAccount = userAccountService.findByEmail(normalizeEmail(request.email()))
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
 
         boolean isPasswordCorrect = passwordEncoder.matches(request.password(), userAccount.getPasswordHash());
@@ -63,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
 
     private UserAccountRequest getUserAccountRequest(UserRegisterRequest request) {
         return new UserAccountRequest(
-                request.email(),
+                normalizeEmail(request.email()),
                 request.password(),
                 request.phone()
         );
@@ -76,6 +78,10 @@ public class AuthServiceImpl implements AuthService {
                 request.displayName(),
                 request.jumpCm()
         );
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 
 }

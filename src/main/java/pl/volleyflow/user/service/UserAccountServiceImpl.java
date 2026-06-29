@@ -9,6 +9,7 @@ import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.model.*;
 import pl.volleyflow.user.repository.UserAccountRepository;
 
+import java.util.Locale;
 import java.util.Optional;
 
 @Service("userAccountService")
@@ -23,11 +24,17 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional
     public UserAccountDto create(UserAccountRequest userAccountRequest) {
-        if (userAccountRepository.existsByEmail(userAccountRequest.email())) {
-            throw new UserAccountAlreadyExists("User with email " + userAccountRequest.email() + "already exists");
+        String normalizedEmail = normalizeEmail(userAccountRequest.email());
+
+        if (userAccountRepository.existsByEmail(normalizedEmail)) {
+            throw new UserAccountAlreadyExists("User with email " + normalizedEmail + " already exists");
         }
 
-        UserAccount userAccount = UserMapper.mapToEntity(userAccountRequest);
+        UserAccount userAccount = UserMapper.mapToEntity(new UserAccountRequest(
+                normalizedEmail,
+                userAccountRequest.password(),
+                userAccountRequest.phone()
+        ));
         userAccount.setPasswordHash(passwordEncoder.encode(userAccountRequest.password()));
 
         UserAccount savedUser = userAccountRepository.save(userAccount);
@@ -39,15 +46,18 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public UserAccountDto getBasicInfoByEmail(String email) {
-        UserAccount userAccount = userAccountRepository.findByEmail(email)
+        UserAccount userAccount = userAccountRepository.findByEmail(normalizeEmail(email))
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return UserMapper.mapToDto(userAccount);
     }
 
     @Override
     public Optional<UserAccount> findByEmail(String email) {
-        return userAccountRepository.findByEmail(email);
+        return userAccountRepository.findByEmail(normalizeEmail(email));
     }
 
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
 
 }

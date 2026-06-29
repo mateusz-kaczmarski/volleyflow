@@ -164,6 +164,7 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
         join club c on c.id = cm.club_id
         where c.external_id = :clubExternalId
           and cm.external_id = :memberExternalId
+          and cm.active = true
           and c.active = true
         """, nativeQuery = true)
     Optional<ClubMembership> findMembershipByClubExternalIdAndMembershipExternalId(@Param("clubExternalId") UUID clubExternalId,
@@ -193,6 +194,7 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             where c.id = cm.club_id
               and c.external_id = :clubExternalId
               and cm.external_id = :membershipExternalId
+              and cm.active = true
               and c.active = true
             """, nativeQuery = true)
     int deactivateByClubExternalIdAndMembershipExternalId(@Param("clubExternalId") UUID clubExternalId,

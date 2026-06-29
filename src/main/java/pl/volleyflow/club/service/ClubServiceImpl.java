@@ -41,8 +41,8 @@ public class ClubServiceImpl implements ClubService {
             throw new ClubAlreadyExists("Club with name " + clubRequest.name() + " already exists");
         }
 
-        UserAccount userAccount = userAccountService.findByEmail(ownerEmail).
-                orElseThrow(() -> new UserNotFoundException("User not found"));
+        UserAccount userAccount = userAccountService.findByEmail(ownerEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Club club = ClubMapper.mapToEntity(clubRequest);
 
@@ -51,13 +51,6 @@ public class ClubServiceImpl implements ClubService {
         log.info("Saved club {}", savedClub);
 
         return ClubMapper.mapToDto(savedClub);
-    }
-
-    @Override
-    public List<ClubBasicDto> getClubsByUser(UUID userExternalId) {
-        return clubMembershipRepository.findActiveClubMembershipsByUserExternalId(userExternalId).stream()
-                .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
-                .toList();
     }
 
     @Override
@@ -78,9 +71,7 @@ public class ClubServiceImpl implements ClubService {
         Club club = clubRepository.findActiveByExternalId(clubExternalId)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
-        if (!clubMembershipRepository.isClubOwner(userAccount.getId(), club.getId())) {
-            throw new UserNoPermission("User has no permission to edit this club");
-        }
+        requireClubOwner(userAccount, club);
 
         if (clubUpdateRequest.name() != null) {
             clubRepository.findByNameAndActiveTrue(clubUpdateRequest.name())
@@ -105,9 +96,7 @@ public class ClubServiceImpl implements ClubService {
         Club club = clubRepository.findActiveByExternalId(clubExternalId)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
-        if (!clubMembershipRepository.isClubOwner(userAccount.getId(), club.getId())) {
-            throw new UserNoPermission("User has no permission to edit this club");
-        }
+        requireClubOwner(userAccount, club);
 
         clubRepository.deactivateById(club.getId());
         log.info("Change status active for false for club {}", club.getName());
@@ -159,6 +148,12 @@ public class ClubServiceImpl implements ClubService {
                 .build();
 
         clubMembershipRepository.save(clubMembership);
+    }
+
+    private void requireClubOwner(UserAccount userAccount, Club club) {
+        if (!clubMembershipRepository.isClubOwner(userAccount.getId(), club.getId())) {
+            throw new UserNoPermission("User has no permission to edit this club");
+        }
     }
 
 }

@@ -12,8 +12,6 @@ public interface ClubService {
 
     ClubBasicDto createClub(ClubRequest clubRequest, String ownerEmail);
 
-    List<ClubBasicDto> getClubsByUser(UUID userExternalId);
-
     List<ClubBasicDto> getMyClubs(String userEmail);
 
     ClubBasicDto updateClub(ClubUpdateRequest clubUpdateRequest, UUID clubExternalId, String userEmail);

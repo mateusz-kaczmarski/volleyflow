@@ -28,11 +28,6 @@ public class ClubController {
         return ResponseEntity.status(HttpStatus.CREATED).body(clubService.createClub(clubRequest, principal.getName()));
     }
 
-    @GetMapping("/user/{userExternalId}")
-    List<ClubBasicDto> getClubsByUser(@PathVariable UUID userExternalId) {
-        return clubService.getClubsByUser(userExternalId);
-    }
-
     @GetMapping("/my-clubs")
     List<ClubBasicDto> getMyClubs(Principal principal) {
         return clubService.getMyClubs(principal.getName());

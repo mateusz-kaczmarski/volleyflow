@@ -31,6 +31,7 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
             set active = false,
                 updated_at = now()
             where id = :clubId
+              and active = true
             """, nativeQuery = true)
     void deactivateById(@Param("clubId") long clubId);
 

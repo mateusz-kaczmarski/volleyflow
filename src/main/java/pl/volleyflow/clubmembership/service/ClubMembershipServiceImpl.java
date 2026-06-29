@@ -36,7 +36,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         Club club = clubRepository.findActiveByExternalId(request.clubExternalId())
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
-        validateCanManageClubMemberships(request.clubExternalId(), userEmail);
+        requireCanManageClubMemberships(request.clubExternalId(), userEmail);
         validateCreateMembership(request);
 
         PersonProfile personProfile = ClubMembershipMapper.mapToPersonProfile(request);
@@ -89,7 +89,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                                               UUID membershipExternalId,
                                               ClubMembershipUpdateRequest request,
                                               String userEmail) {
-        validateCanManageClubMemberships(clubExternalId, userEmail);
+        requireCanManageClubMemberships(clubExternalId, userEmail);
 
         ClubMembership membership = clubMembershipRepository
                 .findMembershipByClubExternalIdAndMembershipExternalId(clubExternalId, membershipExternalId)
@@ -104,7 +104,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     @Override
     @Transactional
     public void deleteMembership(UUID clubExternalId, UUID membershipExternalId, String userEmail) {
-        validateCanManageClubMemberships(clubExternalId, userEmail);
+        requireCanManageClubMemberships(clubExternalId, userEmail);
 
         int updatedRows = clubMembershipRepository.deactivateByClubExternalIdAndMembershipExternalId(
                 clubExternalId,
@@ -121,23 +121,28 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         }
     }
 
-    private void validateCanManageClubMemberships(UUID clubExternalId, String userEmail) {
+    private void requireCanManageClubMemberships(UUID clubExternalId, String userEmail) {
         if (!clubMembershipRepository.canManageClubMemberships(clubExternalId, userEmail)) {
             throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
         }
     }
 
     private void validateCreateMembership(ClubMembershipCreateRequest request) {
+        validateMembershipRole(request.role());
+
         if (clubMembershipRepository.existsActivePlayerInClub(
                 request.clubExternalId(),
                 request.firstName(),
-                request.lastName())) {
+                request.lastName()
+        )) {
             throw new ClubMembershipAlreadyExistsException("Player already exists in this club");
         }
 
-        if (request.shirtNumber() != null && clubMembershipRepository.existsActiveShirtNumberInClub(
+        if (request.shirtNumber() != null
+                && clubMembershipRepository.existsActiveShirtNumberInClub(
                 request.clubExternalId(),
-                request.shirtNumber())) {
+                request.shirtNumber()
+        )) {
             throw new ClubMembershipAlreadyExistsException("Shirt number already exists in this club");
         }
     }
@@ -146,11 +151,14 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
             UUID clubExternalId,
             UUID membershipExternalId,
             ClubMembershipUpdateRequest request) {
+        validateMembershipRole(request.role());
+
         if (clubMembershipRepository.existsActivePlayerInClubExcludingMembership(
                 clubExternalId,
                 request.firstName(),
                 request.lastName(),
-                membershipExternalId)) {
+                membershipExternalId
+        )) {
             throw new ClubMembershipAlreadyExistsException("Player already exists in this club");
         }
 
@@ -158,8 +166,15 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                 && clubMembershipRepository.existsActiveShirtNumberInClubExcludingMembership(
                 clubExternalId,
                 request.shirtNumber(),
-                membershipExternalId)) {
+                membershipExternalId
+        )) {
             throw new ClubMembershipAlreadyExistsException("Shirt number already exists in this club");
+        }
+    }
+
+    private void validateMembershipRole(ClubMembershipRole role) {
+        if (ClubMembershipRole.OWNER.equals(role)) {
+            throw new ClubMembershipAccessDeniedException("Owner role cannot be assigned through membership endpoint");
         }
     }
 

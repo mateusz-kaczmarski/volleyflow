@@ -78,6 +78,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             join user_account ua on ua.id = pp.user_account_id
             where c.external_id = :clubExternalId
               and ua.external_id = :userAccountExternalId
+              and cm.active = true
+              and c.active = true
             """, nativeQuery = true)
     boolean existsUserMembershipInClub(@Param("clubExternalId") UUID clubExternalId,
                                        @Param("userAccountExternalId") UUID userAccountExternalId);
@@ -90,6 +92,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             join user_account ua on ua.id = pp.user_account_id
             where c.external_id = :clubExternalId
               and ua.email = :email
+              and cm.active = true
+              and c.active = true
             """, nativeQuery = true)
     boolean isClubMember(@Param("clubExternalId") UUID clubExternalId,
                          @Param("email") String email);
@@ -101,6 +105,7 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             join person_profile pp on pp.id = cm.person_profile_id
             join user_account ua on ua.id = pp.user_account_id
             where ua.external_id = :userAccountExternalId
+              and cm.active = true
               and c.active = true
             """, nativeQuery = true)
     List<ClubMembership> findActiveClubMembershipsByUserExternalId(@Param("userAccountExternalId") UUID userAccountExternalId);
@@ -139,6 +144,7 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             join user_account ua on ua.id = pp.user_account_id
             where c.external_id = :clubExternalId
               and ua.email = :email
+              and cm.active = true
               and c.active = true
             limit 1
             """, nativeQuery = true)
@@ -155,6 +161,7 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             where pp.user_account_id = :userId
               and cm.club_id = :clubId
               and cm.role = 'OWNER'
+              and cm.active = true
             """, nativeQuery = true)
     boolean isClubOwner(@Param("userId") long userId, @Param("clubId") long clubId);
 

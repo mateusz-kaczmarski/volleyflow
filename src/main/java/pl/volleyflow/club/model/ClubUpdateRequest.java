@@ -1,6 +1,6 @@
 package pl.volleyflow.club.model;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 public record ClubUpdateRequest(
         @Size(max = 120, message = "club name cannot exceed 120 characters")

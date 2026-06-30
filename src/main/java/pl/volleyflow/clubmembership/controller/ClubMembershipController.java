@@ -1,5 +1,6 @@
 package pl.volleyflow.clubmembership.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +10,6 @@ import pl.volleyflow.clubmembership.model.ClubMembershipCreateRequest;
 import pl.volleyflow.clubmembership.model.ClubMembershipUpdateRequest;
 import pl.volleyflow.clubmembership.service.ClubMembershipService;
 
-import javax.validation.Valid;
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;

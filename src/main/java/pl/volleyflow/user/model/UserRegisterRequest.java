@@ -1,10 +1,6 @@
 package pl.volleyflow.user.model;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record UserRegisterRequest(
         @NotBlank(message = "email cannot be blank")

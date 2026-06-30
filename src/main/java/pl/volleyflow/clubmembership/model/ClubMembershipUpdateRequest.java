@@ -1,6 +1,7 @@
 package pl.volleyflow.clubmembership.model;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
+
 import java.time.LocalDate;
 import java.util.Set;
 

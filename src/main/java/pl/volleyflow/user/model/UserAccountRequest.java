@@ -1,8 +1,7 @@
 package pl.volleyflow.user.model;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
-
-import javax.validation.constraints.NotBlank;
 
 @Builder
 public record UserAccountRequest(

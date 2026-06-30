@@ -1,5 +1,6 @@
 package pl.volleyflow.personprofile.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,7 +11,7 @@ import pl.volleyflow.personprofile.model.PersonProfileDto;
 import pl.volleyflow.personprofile.model.PersonProfileRequest;
 import pl.volleyflow.personprofile.service.PersonProfileService;
 
-import javax.validation.Valid;
+import java.security.Principal;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,8 +21,9 @@ public class PersonProfileController {
     private final PersonProfileService personProfileService;
 
     @PostMapping()
-    ResponseEntity<PersonProfileDto> createProfile(@RequestBody @Valid PersonProfileRequest personProfileRequest) {
-        return ResponseEntity.ok(personProfileService.createProfile(personProfileRequest));
+    ResponseEntity<PersonProfileDto> createProfile(@RequestBody @Valid PersonProfileRequest personProfileRequest,
+                                                   Principal principal) {
+        return ResponseEntity.ok(personProfileService.createProfile(personProfileRequest, principal.getName()));
     }
 
 }

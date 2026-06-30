@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface PersonProfileService {
 
-    PersonProfileDto createProfile(PersonProfileRequest personProfileRequest);
+    PersonProfileDto createProfile(PersonProfileRequest personProfileRequest, String userEmail);
 
     PersonProfile createProfile(UserAccount userAccount, PersonProfileRequest personProfileRequest);
 

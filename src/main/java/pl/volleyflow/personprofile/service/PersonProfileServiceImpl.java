@@ -10,6 +10,8 @@ import pl.volleyflow.personprofile.model.PersonProfileMapper;
 import pl.volleyflow.personprofile.model.PersonProfileRequest;
 import pl.volleyflow.personprofile.repository.PersonProfileRepository;
 import pl.volleyflow.user.entity.UserAccount;
+import pl.volleyflow.user.model.UserNotFoundException;
+import pl.volleyflow.user.repository.UserAccountRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -18,11 +20,15 @@ import pl.volleyflow.user.entity.UserAccount;
 public class PersonProfileServiceImpl implements PersonProfileService {
 
     private final PersonProfileRepository personProfileRepository;
+    private final UserAccountRepository userAccountRepository;
 
     @Override
     @Transactional
-    public PersonProfileDto createProfile(PersonProfileRequest personProfileRequest) {
-        PersonProfile savedPersonProfile = createProfile(null, personProfileRequest);
+    public PersonProfileDto createProfile(PersonProfileRequest personProfileRequest, String userEmail) {
+        UserAccount user = userAccountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        PersonProfile savedPersonProfile = createProfile(user, personProfileRequest);
 
         log.info("Created person profile {}", savedPersonProfile.getExternalId());
         return PersonProfileMapper.mapToDto(savedPersonProfile);

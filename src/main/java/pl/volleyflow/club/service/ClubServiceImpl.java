@@ -99,6 +99,8 @@ public class ClubServiceImpl implements ClubService {
         requireClubOwner(userAccount, club);
 
         clubRepository.deactivateById(club.getId());
+        clubMembershipRepository.deactivateAllMemberships(club.getId());
+
         log.info("Change status active for false for club {}", club.getName());
     }
 

@@ -121,8 +121,8 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             order by cm.shirt_number nulls last, cm.id
             """, nativeQuery = true)
     List<ClubMembership> findMembershipsByClubRoleAndActiveFilter(@Param("clubExternalId") UUID clubExternalId,
-                                                                   @Param("role") String role,
-                                                                   @Param("active") Boolean active);
+                                                                  @Param("role") String role,
+                                                                  @Param("active") Boolean active);
 
     @Query(value = """
             select cm.*
@@ -166,14 +166,14 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
     boolean isClubOwner(@Param("userId") long userId, @Param("clubId") long clubId);
 
     @Query(value = """
-        select cm.*
-        from club_membership cm
-        join club c on c.id = cm.club_id
-        where c.external_id = :clubExternalId
-          and cm.external_id = :memberExternalId
-          and cm.active = true
-          and c.active = true
-        """, nativeQuery = true)
+            select cm.*
+            from club_membership cm
+            join club c on c.id = cm.club_id
+            where c.external_id = :clubExternalId
+              and cm.external_id = :memberExternalId
+              and cm.active = true
+              and c.active = true
+            """, nativeQuery = true)
     Optional<ClubMembership> findMembershipByClubExternalIdAndMembershipExternalId(@Param("clubExternalId") UUID clubExternalId,
                                                                                    @Param("memberExternalId") UUID memberExternalId);
 
@@ -207,4 +207,11 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
     int deactivateByClubExternalIdAndMembershipExternalId(@Param("clubExternalId") UUID clubExternalId,
                                                           @Param("membershipExternalId") UUID membershipExternalId);
 
+    @Modifying
+    @Query(value = """
+            update club_membership
+            set active = false
+            where club_id = :clubId
+            """, nativeQuery = true)
+    void deactivateAllMemberships(@Param("clubId") Long clubId);
 }

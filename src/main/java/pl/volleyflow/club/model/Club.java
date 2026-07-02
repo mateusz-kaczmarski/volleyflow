@@ -2,7 +2,6 @@ package pl.volleyflow.club.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -38,7 +37,9 @@ public class Club {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    private boolean active;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "club_status", nullable = false, length = 20)
+    private ClubStatus clubStatus;
 
     @Version
     private int version;
@@ -48,7 +49,9 @@ public class Club {
         externalId = UUID.randomUUID();
         createdAt = Instant.now();
         updatedAt = Instant.now();
-        active = true;
+        if (clubStatus == null) {
+            clubStatus = ClubStatus.ACTIVE;
+        }
     }
 
     @PreUpdate
@@ -56,12 +59,4 @@ public class Club {
         updatedAt = Instant.now();
     }
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this)
-                .append("id", id)
-                .append("externalId", externalId)
-                .append("name", name)
-                .toString();
-    }
 }

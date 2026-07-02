@@ -18,6 +18,7 @@ import pl.volleyflow.user.model.UserNoPermission;
 import pl.volleyflow.user.model.UserNotFoundException;
 import pl.volleyflow.user.service.UserAccountService;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,9 +36,10 @@ public class ClubServiceImpl implements ClubService {
     @Override
     @Transactional
     public ClubBasicDto createClub(ClubRequest clubRequest, String ownerEmail) {
-        log.info("Start register club {} ", clubRequest);
+        log.info("Starting club creation: name={}, ownerEmail={}", clubRequest.name(), ownerEmail);
 
-        if (clubRepository.existsByNameAndActiveTrue(clubRequest.name())) {
+        if (clubRepository.existsByNameAndClubStatus(clubRequest.name(), ClubStatus.ACTIVE)) {
+            log.warn("Club creation rejected: active club with name {} already exists", clubRequest.name());
             throw new ClubAlreadyExists("Club with name " + clubRequest.name() + " already exists");
         }
 
@@ -48,7 +50,7 @@ public class ClubServiceImpl implements ClubService {
 
         Club savedClub = clubRepository.save(club);
         createOwnerMembership(savedClub, userAccount);
-        log.info("Saved club {}", savedClub);
+        log.info("Created club: externalId={}, name={}, ownerEmail={}", savedClub.getExternalId(), savedClub.getName(), ownerEmail);
 
         return ClubMapper.mapToDto(savedClub);
     }
@@ -57,7 +59,7 @@ public class ClubServiceImpl implements ClubService {
     public List<ClubBasicDto> getMyClubs(String userEmail) {
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return clubMembershipRepository.findActiveClubMembershipsByUserExternalId(userAccount.getExternalId()).stream()
+        return clubMembershipRepository.findActiveByUser(userAccount.getExternalId(), ClubStatus.ACTIVE).stream()
                 .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
     }
@@ -65,24 +67,28 @@ public class ClubServiceImpl implements ClubService {
     @Override
     @Transactional
     public ClubBasicDto updateClub(ClubUpdateRequest clubUpdateRequest, UUID clubExternalId, String userEmail) {
+        log.info("Starting club update: clubExternalId={}, userEmail={}", clubExternalId, userEmail);
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Club club = clubRepository.findActiveByExternalId(clubExternalId)
+        Club club = clubRepository.findByExternalIdAndClubStatus(clubExternalId, ClubStatus.ACTIVE)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
         requireClubOwner(userAccount, club);
 
         if (clubUpdateRequest.name() != null) {
-            clubRepository.findByNameAndActiveTrue(clubUpdateRequest.name())
+            clubRepository.findByNameAndClubStatus(clubUpdateRequest.name(), ClubStatus.ACTIVE)
                     .filter(existingClub -> !existingClub.getExternalId().equals(clubExternalId))
                     .ifPresent(existingClub -> {
+                        log.warn("Club update rejected: name {} already used by clubExternalId={}",
+                                clubUpdateRequest.name(), existingClub.getExternalId());
                         throw new ClubAlreadyExists("Club with name " + clubUpdateRequest.name() + " already exists");
                     });
         }
 
         ClubMapper.updateEntity(club, clubUpdateRequest);
         Club updatedClub = clubRepository.save(club);
+        log.info("Updated club: clubExternalId={}, userEmail={}", updatedClub.getExternalId(), userEmail);
         return ClubMapper.mapToDto(updatedClub);
 
     }
@@ -90,39 +96,47 @@ public class ClubServiceImpl implements ClubService {
     @Override
     @Transactional
     public void deleteClub(UUID clubExternalId, String userEmail) {
+        log.info("Starting club delete: clubExternalId={}, userEmail={}", clubExternalId, userEmail);
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Club club = clubRepository.findActiveByExternalId(clubExternalId)
+        Club club = clubRepository.findByExternalIdAndClubStatus(clubExternalId, ClubStatus.ACTIVE)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
         requireClubOwner(userAccount, club);
 
-        clubRepository.deactivateById(club.getId());
-        clubMembershipRepository.deactivateAllMemberships(club.getId());
+        clubRepository.updateStatus(club.getId(), ClubStatus.ACTIVE, ClubStatus.DELETED, Instant.now());
+        clubMembershipRepository.deactivateAllByClubId(club.getId());
 
-        log.info("Change status active for false for club {}", club.getName());
+        log.info("Deleted club and deactivated memberships: clubExternalId={}, name={}, userEmail={}",
+                clubExternalId, club.getName(), userEmail);
     }
 
     @Override
     public ClubBasicDto getClub(UUID clubExternalId) {
-        return clubRepository.findActiveByExternalId(clubExternalId)
+        return clubRepository.findByExternalIdAndClubStatus(clubExternalId, ClubStatus.ACTIVE)
                 .map(ClubMapper::mapToDto)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
     }
 
     @Override
     public ClubDetailsDto getClubDetails(UUID clubExternalId, String userEmail) {
-        Club club = clubRepository.findActiveByExternalId(clubExternalId)
+        Club club = clubRepository.findByExternalIdAndClubStatus(clubExternalId, ClubStatus.ACTIVE)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
-        if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail)) {
+        if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail, ClubStatus.ACTIVE)) {
+            log.warn("Club details access denied: clubExternalId={}, userEmail={}", clubExternalId, userEmail);
             throw new UserNoPermission("User has no permission to watch this club");
         }
 
-        String userRole = clubMembershipRepository.findRoleByClubExternalIdAndUserEmail(clubExternalId, userEmail)
+        String userRole = clubMembershipRepository.findRole(clubExternalId, userEmail, ClubStatus.ACTIVE)
+                .map(Enum::name)
                 .orElse(null);
-        List<ClubMemberDto> members = clubMembershipRepository.findActivePlayersByClubExternalId(clubExternalId)
+        List<ClubMemberDto> members = clubMembershipRepository.findActiveByRole(
+                        clubExternalId,
+                        ClubMembershipRole.PLAYER,
+                        ClubStatus.ACTIVE
+                )
                 .stream()
                 .map(ClubMembershipMapper::mapToClubMemberDto)
                 .toList();
@@ -135,9 +149,10 @@ public class ClubServiceImpl implements ClubService {
         PersonProfile personProfile = personProfileService.findByUserAccount(userAccount)
                 .orElseThrow(() -> new UserNotFoundException("Person profile not found for user"));
 
-        if (clubMembershipRepository.existsUserMembershipInClub(
+        if (clubMembershipRepository.existsUserInClub(
                 club.getExternalId(),
-                userAccount.getExternalId()
+                userAccount.getExternalId(),
+                ClubStatus.ACTIVE
         )) {
             return;
         }
@@ -150,10 +165,14 @@ public class ClubServiceImpl implements ClubService {
                 .build();
 
         clubMembershipRepository.save(clubMembership);
+        log.info("Created owner membership: clubExternalId={}, userExternalId={}",
+                club.getExternalId(), userAccount.getExternalId());
     }
 
     private void requireClubOwner(UserAccount userAccount, Club club) {
-        if (!clubMembershipRepository.isClubOwner(userAccount.getId(), club.getId())) {
+        if (!clubMembershipRepository.hasRole(userAccount.getId(), club.getId(), ClubMembershipRole.OWNER)) {
+            log.warn("Club owner permission denied: clubExternalId={}, userExternalId={}",
+                    club.getExternalId(), userAccount.getExternalId());
             throw new UserNoPermission("User has no permission to edit this club");
         }
     }

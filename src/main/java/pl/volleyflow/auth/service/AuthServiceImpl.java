@@ -34,6 +34,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse register(UserRegisterRequest request) {
+        String normalizedEmail = normalizeEmail(request.email());
+        log.info("Starting user registration for email {}", normalizedEmail);
+
         UserAccountRequest userRequest = getUserAccountRequest(request);
 
         UserAccountDto userDto = userAccountService.create(userRequest);
@@ -42,15 +45,21 @@ public class AuthServiceImpl implements AuthService {
         personProfileService.createProfile(userAccount, getPersonProfileRequest(request));
         String token = jwtService.generateToken(userAccount);
 
-        log.info("User registered: {}", userDto.email());
+        log.info("User registered successfully: email={}, externalId={}", userDto.email(), userDto.externalId());
 
         return AuthResponse.registerSuccess(token, userDto.externalId());
     }
 
     @Override
     public AuthResponse login(UserLoginRequest request) {
-        UserAccount userAccount = userAccountService.findByEmail(normalizeEmail(request.email()))
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
+        String normalizedEmail = normalizeEmail(request.email());
+        log.info("Login attempt for email {}", normalizedEmail);
+
+        UserAccount userAccount = userAccountService.findByEmail(normalizedEmail)
+                .orElseThrow(() -> {
+                    log.warn("Login failed for email {}: user not found", normalizedEmail);
+                    return new InvalidCredentialsException("Invalid credentials");
+                });
 
         boolean isPasswordCorrect = passwordEncoder.matches(request.password(), userAccount.getPasswordHash());
 
@@ -58,8 +67,10 @@ public class AuthServiceImpl implements AuthService {
                 && userAccount.isEmailVerified()
                 && UserAccountStatus.ACTIVE.equals(userAccount.getStatus())) {
             String token = jwtService.generateToken(userAccount);
+            log.info("Login successful for email {}, externalId={}", normalizedEmail, userAccount.getExternalId());
             return AuthResponse.loginSuccess(token, userAccount.getExternalId());
         }
+        log.warn("Login failed for email {}: invalid password or inactive account", normalizedEmail);
         throw new InvalidCredentialsException("Invalid credentials");
     }
 

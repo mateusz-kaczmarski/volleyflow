@@ -4,35 +4,32 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.club.model.Club;
+import pl.volleyflow.club.model.ClubStatus;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface ClubRepository extends JpaRepository<Club, Long> {
 
-    boolean existsByNameAndActiveTrue(String name);
+    boolean existsByNameAndClubStatus(String name, ClubStatus status);
 
-    @Query(value = """
-            select *
-            from club c
-            where c.external_id = :externalId
-              and c.active = true
-            """, nativeQuery = true)
-    Optional<Club> findActiveByExternalId(@Param("externalId") UUID externalId);
+    Optional<Club> findByNameAndClubStatus(String name, ClubStatus status);
 
-    Optional<Club> findByNameAndActiveTrue(String name);
+    Optional<Club> findByExternalIdAndClubStatus(UUID externalId, ClubStatus status);
 
     @Modifying
-    @Transactional
-    @Query(value = """
-            update club
-            set active = false,
-                updated_at = now()
-            where id = :clubId
-              and active = true
-            """, nativeQuery = true)
-    void deactivateById(@Param("clubId") long clubId);
+    @Query("""
+            update Club c
+            set c.clubStatus = :newStatus,
+                c.updatedAt = :updatedAt
+            where c.id = :clubId
+              and c.clubStatus = :currentStatus
+            """)
+    int updateStatus(@Param("clubId") long clubId,
+                     @Param("currentStatus") ClubStatus currentStatus,
+                     @Param("newStatus") ClubStatus newStatus,
+                     @Param("updatedAt") Instant updatedAt);
 
 }

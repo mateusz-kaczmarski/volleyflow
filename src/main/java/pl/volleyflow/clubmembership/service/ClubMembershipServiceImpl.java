@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.club.model.Club;
 import pl.volleyflow.club.model.ClubNotFoundException;
+import pl.volleyflow.club.model.ClubStatus;
 import pl.volleyflow.club.repository.ClubRepository;
 import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
 import pl.volleyflow.clubmembership.model.*;
@@ -31,9 +32,10 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     @Override
     @Transactional
     public ClubMembershipDto createMembership(ClubMembershipCreateRequest request, String userEmail) {
-        log.info("Start create club membership {}", request);
+        log.info("Starting membership creation: clubExternalId={}, role={}, userEmail={}",
+                request.clubExternalId(), request.role(), userEmail);
 
-        Club club = clubRepository.findActiveByExternalId(request.clubExternalId())
+        Club club = clubRepository.findByExternalIdAndClubStatus(request.clubExternalId(), ClubStatus.ACTIVE)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
 
         requireCanManageClubMemberships(request.clubExternalId(), userEmail);
@@ -47,7 +49,8 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         membership.setPersonProfile(savedPersonProfile);
 
         ClubMembership savedMembership = clubMembershipRepository.save(membership);
-        log.info("Saved club membership {}", savedMembership.getExternalId());
+        log.info("Created membership: membershipExternalId={}, clubExternalId={}, role={}",
+                savedMembership.getExternalId(), club.getExternalId(), savedMembership.getRole());
 
         return ClubMembershipMapper.mapToDto(savedMembership);
     }
@@ -59,10 +62,11 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                                                     Boolean active) {
         requireClubMember(clubExternalId, userEmail);
 
-        return clubMembershipRepository.findMembershipsByClubRoleAndActiveFilter(
+        return clubMembershipRepository.findByClubAndRole(
                         clubExternalId,
-                        ClubMembershipRole.PLAYER.name(),
-                        active
+                        ClubMembershipRole.PLAYER,
+                        active,
+                        ClubStatus.ACTIVE
                 )
                 .stream()
                 .map(ClubMembershipMapper::mapToDto)
@@ -77,7 +81,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         requireClubMember(clubExternalId, userEmail);
 
         ClubMembership membership = clubMembershipRepository
-                .findMembershipByClubExternalIdAndMembershipExternalId(clubExternalId, membershipExternalId)
+                .findActiveMembership(clubExternalId, membershipExternalId, ClubStatus.ACTIVE)
                 .orElseThrow(() -> new ClubMembershipNotFoundException("Club membership not found"));
 
         return ClubMembershipMapper.mapToDto(membership);
@@ -89,40 +93,57 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                                               UUID membershipExternalId,
                                               ClubMembershipUpdateRequest request,
                                               String userEmail) {
+        log.info("Starting membership update: clubExternalId={}, membershipExternalId={}, userEmail={}",
+                clubExternalId, membershipExternalId, userEmail);
         requireCanManageClubMemberships(clubExternalId, userEmail);
 
         ClubMembership membership = clubMembershipRepository
-                .findMembershipByClubExternalIdAndMembershipExternalId(clubExternalId, membershipExternalId)
+                .findActiveMembership(clubExternalId, membershipExternalId, ClubStatus.ACTIVE)
                 .orElseThrow(() -> new ClubMembershipNotFoundException("Club membership not found"));
 
         validateUpdateMembership(clubExternalId, membershipExternalId, request);
 
         ClubMembershipMapper.updateEntity(membership, request);
+        log.info("Updated membership: clubExternalId={}, membershipExternalId={}, role={}",
+                clubExternalId, membershipExternalId, membership.getRole());
         return ClubMembershipMapper.mapToDto(membership);
     }
 
     @Override
     @Transactional
     public void deleteMembership(UUID clubExternalId, UUID membershipExternalId, String userEmail) {
+        log.info("Starting membership delete: clubExternalId={}, membershipExternalId={}, userEmail={}",
+                clubExternalId, membershipExternalId, userEmail);
         requireCanManageClubMemberships(clubExternalId, userEmail);
 
-        int updatedRows = clubMembershipRepository.deactivateByClubExternalIdAndMembershipExternalId(
+        int updatedRows = clubMembershipRepository.deactivateMembership(
                 clubExternalId,
-                membershipExternalId
+                membershipExternalId,
+                ClubStatus.ACTIVE
         );
         if (updatedRows == 0) {
+            log.warn("Membership delete failed: membership not found or inactive. clubExternalId={}, membershipExternalId={}",
+                    clubExternalId, membershipExternalId);
             throw new ClubMembershipNotFoundException("Club membership not found");
         }
+        log.info("Deleted membership: clubExternalId={}, membershipExternalId={}", clubExternalId, membershipExternalId);
     }
 
     private void requireClubMember(UUID clubExternalId, String userEmail) {
-        if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail)) {
+        if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail, ClubStatus.ACTIVE)) {
+            log.warn("Club membership access denied: clubExternalId={}, userEmail={}", clubExternalId, userEmail);
             throw new ClubMembershipAccessDeniedException("You do not have access to this club");
         }
     }
 
     private void requireCanManageClubMemberships(UUID clubExternalId, String userEmail) {
-        if (!clubMembershipRepository.canManageClubMemberships(clubExternalId, userEmail)) {
+        if (!clubMembershipRepository.hasAnyRole(
+                clubExternalId,
+                userEmail,
+                List.of(ClubMembershipRole.OWNER, ClubMembershipRole.TRAINER),
+                ClubStatus.ACTIVE
+        )) {
+            log.warn("Club membership management denied: clubExternalId={}, userEmail={}", clubExternalId, userEmail);
             throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
         }
     }
@@ -130,19 +151,23 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     private void validateCreateMembership(ClubMembershipCreateRequest request) {
         validateMembershipRole(request.role());
 
-        if (clubMembershipRepository.existsActivePlayerInClub(
+        if (clubMembershipRepository.existsPlayer(
                 request.clubExternalId(),
                 request.firstName(),
-                request.lastName()
-        )) {
+                request.lastName(),
+                ClubStatus.ACTIVE)) {
+            log.warn("Membership creation rejected: player already exists. clubExternalId={}, firstName={}, lastName={}",
+                    request.clubExternalId(), request.firstName(), request.lastName());
             throw new ClubMembershipAlreadyExistsException("Player already exists in this club");
         }
 
         if (request.shirtNumber() != null
-                && clubMembershipRepository.existsActiveShirtNumberInClub(
+                && clubMembershipRepository.existsShirtNumber(
                 request.clubExternalId(),
-                request.shirtNumber()
-        )) {
+                request.shirtNumber(),
+                ClubStatus.ACTIVE)) {
+            log.warn("Membership creation rejected: shirt number already exists. clubExternalId={}, shirtNumber={}",
+                    request.clubExternalId(), request.shirtNumber());
             throw new ClubMembershipAlreadyExistsException("Shirt number already exists in this club");
         }
     }
@@ -153,27 +178,32 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
             ClubMembershipUpdateRequest request) {
         validateMembershipRole(request.role());
 
-        if (clubMembershipRepository.existsActivePlayerInClubExcludingMembership(
+        if (clubMembershipRepository.existsPlayerExcept(
                 clubExternalId,
                 request.firstName(),
                 request.lastName(),
-                membershipExternalId
-        )) {
+                membershipExternalId,
+                ClubStatus.ACTIVE)) {
+            log.warn("Membership update rejected: player already exists. clubExternalId={}, membershipExternalId={}, firstName={}, lastName={}",
+                    clubExternalId, membershipExternalId, request.firstName(), request.lastName());
             throw new ClubMembershipAlreadyExistsException("Player already exists in this club");
         }
 
         if (request.shirtNumber() != null
-                && clubMembershipRepository.existsActiveShirtNumberInClubExcludingMembership(
+                && clubMembershipRepository.existsShirtNumberExcept(
                 clubExternalId,
                 request.shirtNumber(),
-                membershipExternalId
-        )) {
+                membershipExternalId,
+                ClubStatus.ACTIVE)) {
+            log.warn("Membership update rejected: shirt number already exists. clubExternalId={}, membershipExternalId={}, shirtNumber={}",
+                    clubExternalId, membershipExternalId, request.shirtNumber());
             throw new ClubMembershipAlreadyExistsException("Shirt number already exists in this club");
         }
     }
 
     private void validateMembershipRole(ClubMembershipRole role) {
         if (ClubMembershipRole.OWNER.equals(role)) {
+            log.warn("Membership role validation rejected: OWNER cannot be assigned through membership endpoint");
             throw new ClubMembershipAccessDeniedException("Owner role cannot be assigned through membership endpoint");
         }
     }

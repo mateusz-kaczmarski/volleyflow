@@ -25,8 +25,10 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional
     public UserAccountDto create(UserAccountRequest userAccountRequest) {
         String normalizedEmail = normalizeEmail(userAccountRequest.email());
+        log.info("Creating user account for email {}", normalizedEmail);
 
         if (userAccountRepository.existsByEmail(normalizedEmail)) {
+            log.warn("User account creation rejected: email {} already exists", normalizedEmail);
             throw new UserAccountAlreadyExists("User with email " + normalizedEmail + " already exists");
         }
 
@@ -40,14 +42,19 @@ public class UserAccountServiceImpl implements UserAccountService {
         UserAccount savedUser = userAccountRepository.save(userAccount);
         UserAccountDto userAccountDto = UserMapper.mapToDto(savedUser);
 
-        log.info("Add user wit e-mail and externalId {}", userAccountDto);
+        log.info("Created user account: email={}, externalId={}", userAccountDto.email(), userAccountDto.externalId());
         return userAccountDto;
     }
 
     @Override
     public UserAccountDto getBasicInfoByEmail(String email) {
-        UserAccount userAccount = userAccountRepository.findByEmail(normalizeEmail(email))
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        String normalizedEmail = normalizeEmail(email);
+
+        UserAccount userAccount = userAccountRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> {
+                    log.warn("Basic user info lookup failed: email {} not found", normalizedEmail);
+                    return new UserNotFoundException("User not found");
+                });
         return UserMapper.mapToDto(userAccount);
     }
 

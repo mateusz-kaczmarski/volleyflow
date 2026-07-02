@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import pl.volleyflow.club.model.Club;
 import pl.volleyflow.club.model.ClubRequest;
+import pl.volleyflow.club.model.ClubStatus;
 import pl.volleyflow.club.repository.ClubRepository;
 import pl.volleyflow.club.service.ClubService;
 import pl.volleyflow.clubmembership.model.ClubMembershipCreateRequest;
@@ -98,7 +99,7 @@ public class DevDataInitializer {
     }
 
     private void seedMemberships() {
-        UUID clubExternalId = clubRepository.findByNameAndActiveTrue(CLUB_NAME)
+        UUID clubExternalId = clubRepository.findByNameAndClubStatus(CLUB_NAME, ClubStatus.ACTIVE)
                 .map(Club::getExternalId)
                 .orElseThrow(() -> new IllegalStateException("Default club was not created"));
 
@@ -118,10 +119,11 @@ public class DevDataInitializer {
                                 String displayName,
                                 int shirtNumber,
                                 MemberPosition position) {
-        if (clubMembershipRepository.existsActivePlayerInClub(
+        if (clubMembershipRepository.existsPlayer(
                 clubExternalId,
                 firstName,
-                lastName
+                lastName,
+                ClubStatus.ACTIVE
         )) {
             log.info("Membership already exists for {} {}", firstName, lastName);
             return;

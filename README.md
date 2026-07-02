@@ -23,6 +23,7 @@ Backend application for managing amateur volleyball clubs, players and club memb
 - Spring Security
 - JWT with `jjwt`
 - PostgreSQL
+- Flyway
 - Maven
 - Docker Compose
 - Lombok
@@ -47,7 +48,7 @@ src/main/java/pl/volleyflow
   clubmembership   club member management
   personprofile    user/player profile management
   security         JWT and Spring Security configuration
-  config           shared configuration and dev seed data
+  config           shared configuration
   user             user account model and service
 ```
 
@@ -96,33 +97,33 @@ Current local configuration is stored in `src/main/resources/application.propert
 
 Authentication:
 
-- `POST /internal/auth/register`
-- `POST /internal/auth/login`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
 
 User:
 
-- `GET /internal/user/me`
+- `GET /api/users/me`
 
 Profile:
 
-- `POST /internal/profile`
+- `POST /api/profiles`
 
 Club:
 
-- `POST /internal/club`
-- `GET /internal/club/my-clubs`
-- `GET /internal/club/{clubExternalId}`
-- `GET /internal/club/{clubExternalId}/details`
-- `PUT /internal/club/{clubExternalId}`
-- `DELETE /internal/club/{clubExternalId}`
+- `POST /api/clubs`
+- `GET /api/clubs/my-clubs`
+- `GET /api/clubs/{clubExternalId}`
+- `GET /api/clubs/{clubExternalId}/details`
+- `PUT /api/clubs/{clubExternalId}`
+- `DELETE /api/clubs/{clubExternalId}`
 
 Membership:
 
-- `POST /internal/membership`
-- `GET /internal/membership/{clubExternalId}/players`
-- `GET /internal/membership/{clubExternalId}/{membershipExternalId}`
-- `PUT /internal/membership/{clubExternalId}/{membershipExternalId}`
-- `DELETE /internal/membership/{clubExternalId}/{membershipExternalId}`
+- `POST /api/memberships`
+- `GET /api/memberships/{clubExternalId}/players`
+- `GET /api/memberships/{clubExternalId}/{membershipExternalId}`
+- `PUT /api/memberships/{clubExternalId}/{membershipExternalId}`
+- `DELETE /api/memberships/{clubExternalId}/{membershipExternalId}`
 
 ## Authentication
 
@@ -140,7 +141,6 @@ The project is still before the final MVP. Core CRUD and membership flows are pr
 
 Planned improvements:
 
-- Flyway database migrations.
 - Tests for main business flows.
 - Kafka and domain events for selected asynchronous processes.
 - Externalized secrets and environment-based configuration.

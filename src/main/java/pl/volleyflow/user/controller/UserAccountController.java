@@ -11,7 +11,7 @@ import pl.volleyflow.user.service.UserAccountService;
 import java.security.Principal;
 
 @RestController
-@RequestMapping("/internal/user")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserAccountController {
 

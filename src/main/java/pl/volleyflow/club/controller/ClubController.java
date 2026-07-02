@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/internal/club")
+@RequestMapping("/api/clubs")
 @RequiredArgsConstructor
 public class ClubController {
 

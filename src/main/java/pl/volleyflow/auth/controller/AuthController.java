@@ -15,7 +15,7 @@ import pl.volleyflow.user.model.UserRegisterRequest;
 
 
 @RestController
-@RequestMapping("/internal/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Log4j2
 public class AuthController {

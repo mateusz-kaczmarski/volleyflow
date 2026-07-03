@@ -23,7 +23,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
 
     @Override
     @Transactional
-    public PersonProfileDto createProfile(PersonProfileRequest personProfileRequest, String userEmail) {
+    public PersonProfileDto createProfile(PersonProfileCreateRequest personProfileCreateRequest, String userEmail) {
         log.info("Starting person profile creation for userEmail={}", userEmail);
         UserAccount user = userAccountRepository.findByEmail(userEmail)
                 .orElseThrow(() -> {
@@ -35,7 +35,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
             throw new PersonProfileAlreadyExists("Profile already exists");
         });
 
-        PersonProfile savedPersonProfile = createProfile(user, personProfileRequest);
+        PersonProfile savedPersonProfile = createProfile(user, personProfileCreateRequest);
 
         log.info("Created person profile: profileExternalId={}, userExternalId={}",
                 savedPersonProfile.getExternalId(), user.getExternalId());
@@ -44,15 +44,35 @@ public class PersonProfileServiceImpl implements PersonProfileService {
 
     @Override
     @Transactional
-    public PersonProfile createProfile(UserAccount userAccount, PersonProfileRequest personProfileRequest) {
-        PersonProfile personProfile = PersonProfileMapper.mapToEntity(personProfileRequest);
+    public PersonProfile createProfile(UserAccount userAccount, PersonProfileCreateRequest personProfileCreateRequest) {
+        PersonProfile personProfile = PersonProfileMapper.createEntity(personProfileCreateRequest);
         personProfile.setUserAccount(userAccount);
         return personProfileRepository.save(personProfile);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<PersonProfile> findByUserAccount(UserAccount userAccount) {
         return personProfileRepository.findByUserAccount(userAccount);
+    }
+
+    @Override
+    @Transactional
+    public PersonProfile updateProfile(PersonProfileUpdateRequest personProfileUpdateRequest, String userEmail) {
+        log.info("Starting person profile update for userEmail={}", userEmail);
+        UserAccount user = userAccountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> {
+                    log.warn("Person profile update failed: userEmail={} not found", userEmail);
+                    return new UserNotFoundException("User not found");
+                });
+
+        PersonProfile personProfile = personProfileRepository.findByUserAccount(user)
+                .orElseThrow(() -> new PersonProfileAlreadyExists("Profile already exists"));
+
+        PersonProfileMapper.updateEntity(personProfile, personProfileUpdateRequest);
+        log.info("Updated person profile: profileExternalId={}, userExternalId={}",
+                personProfile.getExternalId(), user.getExternalId());
+        return personProfile;
     }
 
 }

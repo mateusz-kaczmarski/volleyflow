@@ -2,15 +2,12 @@ package pl.volleyflow.personprofile.model;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record PersonProfileRequest(
-        @NotBlank(message = "first name cannot be blank")
+public record PersonProfileUpdateRequest(
         @Size(max = 80, message = "first name cannot exceed 80 characters")
         String firstName,
 
-        @NotBlank(message = "last name cannot be blank")
         @Size(max = 80, message = "last name cannot exceed 80 characters")
         String lastName,
 
@@ -21,4 +18,3 @@ public record PersonProfileRequest(
         @Max(value = 200, message = "jump must be less than 200 cm")
         Integer jumpCm) {
 }
-

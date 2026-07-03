@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.auth.controller.UserLoginRequest;
 import pl.volleyflow.auth.dto.AuthResponse;
 import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
-import pl.volleyflow.personprofile.model.PersonProfileRequest;
+import pl.volleyflow.personprofile.model.PersonProfileCreateRequest;
 import pl.volleyflow.personprofile.service.PersonProfileService;
 import pl.volleyflow.security.JwtService;
 import pl.volleyflow.user.entity.UserAccount;
@@ -82,8 +82,8 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
-    private PersonProfileRequest getPersonProfileRequest(UserRegisterRequest request) {
-        return new PersonProfileRequest(
+    private PersonProfileCreateRequest getPersonProfileRequest(UserRegisterRequest request) {
+        return new PersonProfileCreateRequest(
                 request.firstName(),
                 request.lastName(),
                 request.displayName(),

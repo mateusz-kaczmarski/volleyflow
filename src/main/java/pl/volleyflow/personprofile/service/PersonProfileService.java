@@ -7,6 +7,7 @@ import pl.volleyflow.personprofile.model.PersonProfileUpdateRequest;
 import pl.volleyflow.user.entity.UserAccount;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface PersonProfileService {
 
@@ -16,6 +17,8 @@ public interface PersonProfileService {
 
     Optional<PersonProfile> findByUserAccount(UserAccount userAccount);
 
-    PersonProfile updateProfile(PersonProfileUpdateRequest personProfileUpdateRequest, String userEmail);
+    PersonProfileDto updateProfile(PersonProfileUpdateRequest personProfileUpdateRequest, String userEmail);
+
+    PersonProfileDto getProfileByExternalId(UUID profileExternalId);
 
 }

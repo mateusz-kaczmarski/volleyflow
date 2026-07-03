@@ -11,6 +11,7 @@ import pl.volleyflow.user.model.UserNotFoundException;
 import pl.volleyflow.user.repository.UserAccountRepository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +33,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
                 });
 
         personProfileRepository.findByUserAccount(user).ifPresent(profile -> {
-            throw new PersonProfileAlreadyExists("Profile already exists");
+            throw new PersonProfileAlreadyExistsException("Profile already exists");
         });
 
         PersonProfile savedPersonProfile = createProfile(user, personProfileCreateRequest);
@@ -58,7 +59,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
 
     @Override
     @Transactional
-    public PersonProfile updateProfile(PersonProfileUpdateRequest personProfileUpdateRequest, String userEmail) {
+    public PersonProfileDto updateProfile(PersonProfileUpdateRequest personProfileUpdateRequest, String userEmail) {
         log.info("Starting person profile update for userEmail={}", userEmail);
         UserAccount user = userAccountRepository.findByEmail(userEmail)
                 .orElseThrow(() -> {
@@ -67,12 +68,19 @@ public class PersonProfileServiceImpl implements PersonProfileService {
                 });
 
         PersonProfile personProfile = personProfileRepository.findByUserAccount(user)
-                .orElseThrow(() -> new PersonProfileAlreadyExists("Profile already exists"));
+                .orElseThrow(() -> new PersonProfileAlreadyExistsException("Profile already exists"));
 
         PersonProfileMapper.updateEntity(personProfile, personProfileUpdateRequest);
         log.info("Updated person profile: profileExternalId={}, userExternalId={}",
                 personProfile.getExternalId(), user.getExternalId());
-        return personProfile;
+        return PersonProfileMapper.mapToDto(personProfile);
+    }
+
+    @Override
+    public PersonProfileDto getProfileByExternalId(UUID profileExternalId) {
+        return personProfileRepository.findByExternalId(profileExternalId)
+                .map(PersonProfileMapper::mapToDto)
+                .orElseThrow(() -> new PersonProfileNotExistException("Profile do not exists"));
     }
 
 }

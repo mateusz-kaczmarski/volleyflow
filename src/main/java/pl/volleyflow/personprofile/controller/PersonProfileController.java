@@ -3,18 +3,14 @@ package pl.volleyflow.personprofile.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import pl.volleyflow.personprofile.model.PersonProfileDto;
+import org.springframework.web.bind.annotation.*;
 import pl.volleyflow.personprofile.model.PersonProfileCreateRequest;
-import pl.volleyflow.personprofile.model.PersonProfileMapper;
+import pl.volleyflow.personprofile.model.PersonProfileDto;
 import pl.volleyflow.personprofile.model.PersonProfileUpdateRequest;
 import pl.volleyflow.personprofile.service.PersonProfileService;
 
 import java.security.Principal;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,10 +27,13 @@ public class PersonProfileController {
 
     @PutMapping
     ResponseEntity<PersonProfileDto> updateProfile(@RequestBody @Valid PersonProfileUpdateRequest personProfileUpdateRequest,
-                                                    Principal principal) {
-        return ResponseEntity.ok(PersonProfileMapper.mapToDto(
-                personProfileService.updateProfile(personProfileUpdateRequest, principal.getName())
-        ));
+                                                   Principal principal) {
+        return ResponseEntity.ok(personProfileService.updateProfile(personProfileUpdateRequest, principal.getName()));
+    }
+
+    @GetMapping("/{profileExternalId}")
+    ResponseEntity<PersonProfileDto> getProfileById(@PathVariable UUID profileExternalId) {
+        return ResponseEntity.ok(personProfileService.getProfileByExternalId(profileExternalId));
     }
 
 }

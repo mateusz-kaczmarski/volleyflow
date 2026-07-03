@@ -12,7 +12,8 @@ import pl.volleyflow.club.model.ClubNotFoundException;
 import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
 import pl.volleyflow.clubmembership.model.exceptions.ClubMembershipAlreadyExistsException;
 import pl.volleyflow.clubmembership.model.exceptions.ClubMembershipNotFoundException;
-import pl.volleyflow.personprofile.model.PersonProfileAlreadyExists;
+import pl.volleyflow.personprofile.model.PersonProfileAlreadyExistsException;
+import pl.volleyflow.personprofile.model.PersonProfileNotExistException;
 import pl.volleyflow.user.model.UserAccountAlreadyExists;
 import pl.volleyflow.user.model.UserNoPermission;
 import pl.volleyflow.user.model.UserNotFoundException;
@@ -67,8 +68,8 @@ public class GlobalErrorHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new GlobalErrorResponse(ex.getMessage()));
     }
 
-    @ExceptionHandler(PersonProfileAlreadyExists.class)
-    public ResponseEntity<GlobalErrorResponse> handlePersonProfileAlreadyExists(PersonProfileAlreadyExists ex) {
+    @ExceptionHandler(PersonProfileAlreadyExistsException.class)
+    public ResponseEntity<GlobalErrorResponse> handlePersonProfileAlreadyExists(PersonProfileAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new GlobalErrorResponse(ex.getMessage()));
     }
 
@@ -80,6 +81,11 @@ public class GlobalErrorHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<GlobalErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         return ResponseEntity.badRequest().body(new GlobalErrorResponse("Incorrect validation"));
+    }
+
+    @ExceptionHandler(PersonProfileNotExistException.class)
+    public ResponseEntity<GlobalErrorResponse> handlePersonProfileNotExistException(MethodArgumentNotValidException ex) {
+        return ResponseEntity.badRequest().body(new GlobalErrorResponse("Profile do not exist"));
     }
 
 }

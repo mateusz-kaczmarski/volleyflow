@@ -83,4 +83,14 @@ public class PersonProfileServiceImpl implements PersonProfileService {
                 .orElseThrow(() -> new PersonProfileNotExistException("Profile do not exists"));
     }
 
+    @Override
+    public PersonProfileDto getMyProfile(String userEmail) {
+        UserAccount user = userAccountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        return personProfileRepository.findByUserAccount(user)
+                .map(PersonProfileMapper::mapToDto)
+                .orElseThrow(() -> new PersonProfileNotExistException("Profile do not exists"));
+    }
+
 }

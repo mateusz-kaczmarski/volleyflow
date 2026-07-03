@@ -36,4 +36,9 @@ public class PersonProfileController {
         return ResponseEntity.ok(personProfileService.getProfileByExternalId(profileExternalId));
     }
 
+    @GetMapping("/me")
+    ResponseEntity<PersonProfileDto> getMyProfile(Principal principal) {
+        return ResponseEntity.ok(personProfileService.getMyProfile(principal.getName()));
+    }
+
 }

@@ -21,4 +21,6 @@ public interface PersonProfileService {
 
     PersonProfileDto getProfileByExternalId(UUID profileExternalId);
 
+    PersonProfileDto getMyProfile(String userEmail);
+
 }

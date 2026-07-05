@@ -15,6 +15,9 @@ import pl.volleyflow.clubmembership.model.exceptions.ClubMembershipNotFoundExcep
 import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
 import pl.volleyflow.personprofile.model.PersonProfile;
 import pl.volleyflow.personprofile.repository.PersonProfileRepository;
+import pl.volleyflow.user.entity.UserAccount;
+import pl.volleyflow.user.model.UserNotFoundException;
+import pl.volleyflow.user.repository.UserAccountRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +31,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     private final ClubRepository clubRepository;
     private final PersonProfileRepository personProfileRepository;
     private final ClubMembershipRepository clubMembershipRepository;
+    private final UserAccountRepository userAccountRepository;
 
     @Override
     @Transactional
@@ -37,8 +41,10 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
 
         Club club = clubRepository.findByExternalIdAndClubStatus(request.clubExternalId(), ClubStatus.ACTIVE)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
+        UserAccount userAccount = userAccountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        requireCanManageClubMemberships(request.clubExternalId(), userEmail);
+        requireClubOwner(userAccount, club);
         validateCreateMembership(request);
 
         PersonProfile personProfile = ClubMembershipMapper.mapToPersonProfile(request);
@@ -95,7 +101,12 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                                               String userEmail) {
         log.info("Starting membership update: clubExternalId={}, membershipExternalId={}, userEmail={}",
                 clubExternalId, membershipExternalId, userEmail);
-        requireCanManageClubMemberships(clubExternalId, userEmail);
+        Club club = clubRepository.findByExternalIdAndClubStatus(clubExternalId, ClubStatus.ACTIVE)
+                .orElseThrow(() -> new ClubNotFoundException("Club not found"));
+        UserAccount userAccount = userAccountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        requireClubOwner(userAccount, club);
 
         ClubMembership membership = clubMembershipRepository
                 .findActiveMembership(clubExternalId, membershipExternalId, ClubStatus.ACTIVE)
@@ -114,7 +125,12 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
     public void deleteMembership(UUID clubExternalId, UUID membershipExternalId, String userEmail) {
         log.info("Starting membership delete: clubExternalId={}, membershipExternalId={}, userEmail={}",
                 clubExternalId, membershipExternalId, userEmail);
-        requireCanManageClubMemberships(clubExternalId, userEmail);
+        Club club = clubRepository.findByExternalIdAndClubStatus(clubExternalId, ClubStatus.ACTIVE)
+                .orElseThrow(() -> new ClubNotFoundException("Club not found"));
+        UserAccount userAccount = userAccountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        requireClubOwner(userAccount, club);
 
         int updatedRows = clubMembershipRepository.deactivateMembership(
                 clubExternalId,
@@ -136,14 +152,10 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         }
     }
 
-    private void requireCanManageClubMemberships(UUID clubExternalId, String userEmail) {
-        if (!clubMembershipRepository.hasAnyRole(
-                clubExternalId,
-                userEmail,
-                List.of(ClubMembershipRole.OWNER, ClubMembershipRole.TRAINER),
-                ClubStatus.ACTIVE
-        )) {
-            log.warn("Club membership management denied: clubExternalId={}, userEmail={}", clubExternalId, userEmail);
+    private void requireClubOwner(UserAccount userAccount, Club club) {
+        if (!clubMembershipRepository.hasRole(userAccount.getId(), club.getId(), ClubMembershipRole.OWNER)) {
+            log.warn("Club membership management denied: clubExternalId={}, userExternalId={}",
+                    club.getExternalId(), userAccount.getExternalId());
             throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
         }
     }

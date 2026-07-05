@@ -170,7 +170,7 @@ public class ClubServiceImpl implements ClubService {
     }
 
     private void requireClubOwner(UserAccount userAccount, Club club) {
-        if (!clubMembershipRepository.hasRole(userAccount.getId(), club.getId(), ClubMembershipRole.OWNER)) {
+        if (!clubMembershipRepository.hasRole(club.getId(), userAccount.getId(), ClubMembershipRole.OWNER)) {
             log.warn("Club owner permission denied: clubExternalId={}, userExternalId={}",
                     club.getExternalId(), userAccount.getExternalId());
             throw new UserNoPermission("User has no permission to edit this club");

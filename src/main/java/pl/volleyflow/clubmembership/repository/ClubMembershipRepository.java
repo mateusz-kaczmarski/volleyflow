@@ -173,20 +173,6 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
                                                   @Param("membershipId") UUID membershipId,
                                                   @Param("clubStatus") ClubStatus clubStatus);
 
-    @Query("""
-            select count(cm) > 0
-            from ClubMembership cm
-            where cm.club.externalId = :clubId
-              and cm.personProfile.userAccount.email = :email
-              and cm.role in :roles
-              and cm.active = true
-              and cm.club.clubStatus = :clubStatus
-            """)
-    boolean hasAnyRole(@Param("clubId") UUID clubId,
-                       @Param("email") String email,
-                       @Param("roles") List<ClubMembershipRole> roles,
-                       @Param("clubStatus") ClubStatus clubStatus);
-
     @Modifying
     @Query("""
             update ClubMembership cm

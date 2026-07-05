@@ -12,6 +12,7 @@ public class UserMapper {
                 .emailVerified(true)
                 .lastLoginAt(null)
                 .status(UserAccountStatus.ACTIVE)
+                .phone(userAccountRequest.phone())
                 .build();
     }
 

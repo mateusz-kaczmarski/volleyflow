@@ -68,7 +68,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
                 });
 
         PersonProfile personProfile = personProfileRepository.findByUserAccount(user)
-                .orElseThrow(() -> new PersonProfileAlreadyExistsException("Profile already exists"));
+                .orElseThrow(() -> new PersonProfileNotExistException("Profile do not exists"));
 
         PersonProfileMapper.updateEntity(personProfile, personProfileUpdateRequest);
         log.info("Updated person profile: profileExternalId={}, userExternalId={}",
@@ -91,6 +91,18 @@ public class PersonProfileServiceImpl implements PersonProfileService {
         return personProfileRepository.findByUserAccount(user)
                 .map(PersonProfileMapper::mapToDto)
                 .orElseThrow(() -> new PersonProfileNotExistException("Profile do not exists"));
+    }
+
+    @Override
+    public void deleteProfile(String userEmail) {
+        UserAccount user = userAccountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        PersonProfile personProfile = personProfileRepository.findByUserAccount(user)
+                .orElseThrow(() -> new PersonProfileNotExistException("Profile do not exists"));
+
+        personProfileRepository.delete(personProfile);
+        log.info("Delete profile: {} {}", personProfile.getFirstName(), personProfile.getLastName());
     }
 
 }

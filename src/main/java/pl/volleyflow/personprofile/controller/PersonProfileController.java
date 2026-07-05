@@ -41,4 +41,10 @@ public class PersonProfileController {
         return ResponseEntity.ok(personProfileService.getMyProfile(principal.getName()));
     }
 
+    @DeleteMapping("/me")
+    ResponseEntity<Void> deleteProfile(Principal principal) {
+        personProfileService.deleteProfile(principal.getName());
+        return ResponseEntity.noContent().build();
+    }
+
 }

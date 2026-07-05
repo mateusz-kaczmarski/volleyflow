@@ -84,8 +84,8 @@ public class GlobalErrorHandler {
     }
 
     @ExceptionHandler(PersonProfileNotExistException.class)
-    public ResponseEntity<GlobalErrorResponse> handlePersonProfileNotExistException(MethodArgumentNotValidException ex) {
-        return ResponseEntity.badRequest().body(new GlobalErrorResponse("Profile do not exist"));
+    public ResponseEntity<GlobalErrorResponse> handlePersonProfileNotExistException(PersonProfileNotExistException ex) {
+        return ResponseEntity.notFound().build();
     }
 
 }

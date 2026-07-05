@@ -23,4 +23,6 @@ public interface PersonProfileService {
 
     PersonProfileDto getMyProfile(String userEmail);
 
+    void deleteProfile(String userEmail);
+
 }

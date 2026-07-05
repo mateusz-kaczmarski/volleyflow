@@ -52,7 +52,7 @@ public class ClubServiceImpl implements ClubService {
         createOwnerMembership(savedClub, userAccount);
         log.info("Created club: externalId={}, name={}, ownerEmail={}", savedClub.getExternalId(), savedClub.getName(), ownerEmail);
 
-        return ClubMapper.mapToDto(savedClub);
+        return ClubMapper.mapToDto(savedClub, ClubMembershipRole.OWNER.name());
     }
 
     @Override
@@ -89,7 +89,7 @@ public class ClubServiceImpl implements ClubService {
         ClubMapper.updateEntity(club, clubUpdateRequest);
         Club updatedClub = clubRepository.save(club);
         log.info("Updated club: clubExternalId={}, userEmail={}", updatedClub.getExternalId(), userEmail);
-        return ClubMapper.mapToDto(updatedClub);
+        return ClubMapper.mapToDto(updatedClub, ClubMembershipRole.OWNER.name());
 
     }
 
@@ -170,7 +170,7 @@ public class ClubServiceImpl implements ClubService {
     }
 
     private void requireClubOwner(UserAccount userAccount, Club club) {
-        if (!clubMembershipRepository.hasRole(club.getId(), userAccount.getId(), ClubMembershipRole.OWNER)) {
+        if (!clubMembershipRepository.hasRole(userAccount.getId(), club.getId(), ClubMembershipRole.OWNER)) {
             log.warn("Club owner permission denied: clubExternalId={}, userExternalId={}",
                     club.getExternalId(), userAccount.getExternalId());
             throw new UserNoPermission("User has no permission to edit this club");

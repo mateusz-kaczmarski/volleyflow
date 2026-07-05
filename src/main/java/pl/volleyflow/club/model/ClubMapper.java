@@ -20,7 +20,6 @@ public class ClubMapper {
                 .name(club.getName())
                 .avatar(club.getAvatar())
                 .description(club.getDescription())
-                .userRole(null)
                 .build();
     }
 

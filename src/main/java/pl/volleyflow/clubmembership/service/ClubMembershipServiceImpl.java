@@ -112,6 +112,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                 .findActiveMembership(clubExternalId, membershipExternalId, ClubStatus.ACTIVE)
                 .orElseThrow(() -> new ClubMembershipNotFoundException("Club membership not found"));
 
+        validateNotOwnerMembership(membership);
         validateUpdateMembership(clubExternalId, membershipExternalId, request);
 
         ClubMembershipMapper.updateEntity(membership, request);
@@ -131,6 +132,11 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         requireClubOwner(userAccount, club);
+
+        ClubMembership membership = clubMembershipRepository
+                .findActiveMembership(clubExternalId, membershipExternalId, ClubStatus.ACTIVE)
+                .orElseThrow(() -> new ClubMembershipNotFoundException("Club membership not found"));
+        validateNotOwnerMembership(membership);
 
         int updatedRows = clubMembershipRepository.deactivateMembership(
                 clubExternalId,
@@ -157,6 +163,14 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
             log.warn("Club membership management denied: clubExternalId={}, userExternalId={}",
                     club.getExternalId(), userAccount.getExternalId());
             throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
+        }
+    }
+
+    private void validateNotOwnerMembership(ClubMembership membership) {
+        if (ClubMembershipRole.OWNER.equals(membership.getRole())) {
+            log.warn("Membership change rejected: owner membership cannot be modified. membershipExternalId={}",
+                    membership.getExternalId());
+            throw new ClubMembershipAccessDeniedException("Owner membership cannot be modified");
         }
     }
 

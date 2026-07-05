@@ -22,7 +22,7 @@ public class Club {
     @Column(nullable = false, unique = true, length = 36, updatable = false)
     private UUID externalId;
 
-    @Column(nullable = false, unique = true, length = 120)
+    @Column(nullable = false, length = 120)
     private String name;
 
     @Column(length = 255)

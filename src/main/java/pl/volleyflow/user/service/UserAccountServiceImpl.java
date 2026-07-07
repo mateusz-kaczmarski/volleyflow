@@ -59,6 +59,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<UserAccount> findByEmail(String email) {
         return userAccountRepository.findByEmail(normalizeEmail(email));
     }

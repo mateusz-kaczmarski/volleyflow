@@ -18,6 +18,7 @@ import pl.volleyflow.user.model.UserAccountRequest;
 import pl.volleyflow.user.model.UserRegisterRequest;
 import pl.volleyflow.user.service.UserAccountService;
 
+import java.time.Instant;
 import java.util.Locale;
 
 @Service("authService")
@@ -51,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public AuthResponse login(UserLoginRequest request) {
         String normalizedEmail = normalizeEmail(request.email());
         log.info("Login attempt for email {}", normalizedEmail);
@@ -67,6 +69,7 @@ public class AuthServiceImpl implements AuthService {
                 && userAccount.isEmailVerified()
                 && UserAccountStatus.ACTIVE.equals(userAccount.getStatus())) {
             String token = jwtService.generateToken(userAccount);
+            userAccount.setLastLoginAt(Instant.now());
             log.info("Login successful for email {}, externalId={}", normalizedEmail, userAccount.getExternalId());
             return AuthResponse.loginSuccess(token, userAccount.getExternalId());
         }

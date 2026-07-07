@@ -93,6 +93,22 @@ port: 5432
 
 Current local configuration is stored in `src/main/resources/application.properties`.
 
+The application uses environment variable placeholders with local demo fallbacks:
+
+```text
+DB_URL=jdbc:postgresql://localhost:5432/volleyflow
+DB_USERNAME=admin
+DB_PASSWORD=admin
+JWT_SECRET=<base64-encoded-demo-secret>
+```
+
+Seeded demo account:
+
+```text
+email: demo.owner@example.com
+password: password
+```
+
 ## Main Endpoints
 
 Authentication:

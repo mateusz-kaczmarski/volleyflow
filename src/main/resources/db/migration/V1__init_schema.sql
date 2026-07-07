@@ -66,8 +66,8 @@ insert into user_account (
 ) values (
     1,
     '00000000-0000-0000-0000-000000000001',
-    'redcrew@gmail.com',
-    '$2a$10$vEYbD98tNVX16BCNRp2v5OAsZZVLgYktRLQ7cYVmP7Hs7TaNkZUom',
+    'demo.owner@example.com',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     null,
     'ACTIVE',
     true,
@@ -80,24 +80,24 @@ insert into user_account (
 insert into person_profile (
     id, external_id, user_account_id, first_name, last_name, display_name, jump_cm, created_at, updated_at, version
 ) values
-    (1, '00000000-0000-0000-0000-000000000101', 1, 'Red', 'Crew', 'RedCrew', null, now(), now(), 0),
-    (2, '00000000-0000-0000-0000-000000000102', null, 'Maciej', 'Kasza', 'Maciek', null, now(), now(), 0),
-    (3, '00000000-0000-0000-0000-000000000103', null, 'Mateusz', 'Piekarz', 'Mateusz P', null, now(), now(), 0),
-    (4, '00000000-0000-0000-0000-000000000104', null, 'Marcin', 'Popiela', 'Marcin', null, now(), now(), 0),
-    (5, '00000000-0000-0000-0000-000000000105', null, 'Kamil', 'Augustyn', 'Kamil A', null, now(), now(), 0),
-    (6, '00000000-0000-0000-0000-000000000106', null, 'Kamil', 'Korczak', 'Kamil K', null, now(), now(), 0),
-    (7, '00000000-0000-0000-0000-000000000107', null, 'Mateusz', 'Kaczmarski', 'Mateusz K', null, now(), now(), 0),
-    (8, '00000000-0000-0000-0000-000000000108', null, 'Marek', 'Pasieczny', 'Marek', null, now(), now(), 0),
-    (9, '00000000-0000-0000-0000-000000000109', null, 'Dominik', 'Kitlas', 'Dominik', null, now(), now(), 0);
+    (1, '00000000-0000-0000-0000-000000000101', 1, 'Demo', 'Owner', 'Demo Owner', null, now(), now(), 0),
+    (2, '00000000-0000-0000-0000-000000000102', null, 'Player', 'One', 'Player One', null, now(), now(), 0),
+    (3, '00000000-0000-0000-0000-000000000103', null, 'Player', 'Two', 'Player Two', null, now(), now(), 0),
+    (4, '00000000-0000-0000-0000-000000000104', null, 'Player', 'Three', 'Player Three', null, now(), now(), 0),
+    (5, '00000000-0000-0000-0000-000000000105', null, 'Player', 'Four', 'Player Four', null, now(), now(), 0),
+    (6, '00000000-0000-0000-0000-000000000106', null, 'Player', 'Five', 'Player Five', null, now(), now(), 0),
+    (7, '00000000-0000-0000-0000-000000000107', null, 'Player', 'Six', 'Player Six', null, now(), now(), 0),
+    (8, '00000000-0000-0000-0000-000000000108', null, 'Player', 'Seven', 'Player Seven', null, now(), now(), 0),
+    (9, '00000000-0000-0000-0000-000000000109', null, 'Player', 'Eight', 'Player Eight', null, now(), now(), 0);
 
 insert into club (
     id, external_id, name, avatar, description, created_at, updated_at, club_status, version
 ) values (
     1,
     '00000000-0000-0000-0000-000000000201',
-    'RedCrew',
-    'redcrew.png',
-    'RedCrew Team',
+    'Demo Club',
+    'demo-club.png',
+    'Demo volleyball club for local development',
     now(),
     now(),
     'ACTIVE',
@@ -109,7 +109,7 @@ insert into club_membership (
 ) values
     (1, '00000000-0000-0000-0000-000000000301', 1, 1, 'OWNER', null, true, null, null, now(), now(), 0),
     (2, '00000000-0000-0000-0000-000000000302', 1, 2, 'PLAYER', 6, true, '2024-09-01', '2025-06-30', now(), now(), 0),
-    (3, '00000000-0000-0000-0000-000000000303', 1, 3, 'PLAYER', 0, true, '2024-09-01', '2025-06-30', now(), now(), 0),
+    (3, '00000000-0000-0000-0000-000000000303', 1, 3, 'PLAYER', 2, true, '2024-09-01', '2025-06-30', now(), now(), 0),
     (4, '00000000-0000-0000-0000-000000000304', 1, 4, 'PLAYER', 97, true, '2024-09-01', '2025-06-30', now(), now(), 0),
     (5, '00000000-0000-0000-0000-000000000305', 1, 5, 'PLAYER', 3, true, '2024-09-01', '2025-06-30', now(), now(), 0),
     (6, '00000000-0000-0000-0000-000000000306', 1, 6, 'PLAYER', 10, true, '2024-09-01', '2025-06-30', now(), now(), 0),

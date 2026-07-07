@@ -79,8 +79,10 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
               and cm.club.clubStatus = :clubStatus
             """)
     boolean existsUserInClub(@Param("clubId") UUID clubId,
-                             @Param("userId") UUID userId,
-                             @Param("clubStatus") ClubStatus clubStatus);
+                              @Param("userId") UUID userId,
+                              @Param("clubStatus") ClubStatus clubStatus);
+
+    boolean existsByPersonProfileId(Long personProfileId);
 
     @Query("""
             select count(cm) > 0

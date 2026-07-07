@@ -19,6 +19,7 @@ import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.model.UserNotFoundException;
 import pl.volleyflow.user.repository.UserAccountRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -176,6 +177,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
 
     private void validateCreateMembership(ClubMembershipCreateRequest request) {
         validateMembershipRole(request.role());
+        validateMembershipDates(request.activeFrom(), request.activeTo());
 
         if (clubMembershipRepository.existsPlayer(
                 request.clubExternalId(),
@@ -203,6 +205,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
             UUID membershipExternalId,
             ClubMembershipUpdateRequest request) {
         validateMembershipRole(request.role());
+        validateMembershipDates(request.activeFrom(), request.activeTo());
 
         if (clubMembershipRepository.existsPlayerExcept(
                 clubExternalId,
@@ -231,6 +234,12 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         if (ClubMembershipRole.OWNER.equals(role)) {
             log.warn("Membership role validation rejected: OWNER cannot be assigned through membership endpoint");
             throw new ClubMembershipAccessDeniedException("Owner role cannot be assigned through membership endpoint");
+        }
+    }
+
+    private void validateMembershipDates(LocalDate activeFrom, LocalDate activeTo) {
+        if (activeFrom != null && activeTo != null && activeFrom.isAfter(activeTo)) {
+            throw new IllegalArgumentException("activeFrom cannot be after activeTo");
         }
     }
 

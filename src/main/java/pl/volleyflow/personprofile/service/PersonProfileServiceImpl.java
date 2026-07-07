@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
 import pl.volleyflow.personprofile.model.*;
 import pl.volleyflow.personprofile.repository.PersonProfileRepository;
 import pl.volleyflow.user.entity.UserAccount;
@@ -21,6 +22,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
 
     private final PersonProfileRepository personProfileRepository;
     private final UserAccountRepository userAccountRepository;
+    private final ClubMembershipRepository clubMembershipRepository;
 
     @Override
     @Transactional
@@ -100,6 +102,10 @@ public class PersonProfileServiceImpl implements PersonProfileService {
 
         PersonProfile personProfile = personProfileRepository.findByUserAccount(user)
                 .orElseThrow(() -> new PersonProfileNotFoundException("Profile do not exists"));
+
+        if (clubMembershipRepository.existsByPersonProfileId(personProfile.getId())) {
+            throw new PersonProfileInUseException("Profile cannot be deleted because it has club memberships");
+        }
 
         personProfileRepository.delete(personProfile);
         log.info("Delete profile: {} {}", personProfile.getFirstName(), personProfile.getLastName());

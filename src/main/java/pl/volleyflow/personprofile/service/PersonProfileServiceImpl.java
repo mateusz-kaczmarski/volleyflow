@@ -68,7 +68,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
                 });
 
         PersonProfile personProfile = personProfileRepository.findByUserAccount(user)
-                .orElseThrow(() -> new PersonProfileNotExistException("Profile do not exists"));
+                .orElseThrow(() -> new PersonProfileNotFoundException("Profile do not exists"));
 
         PersonProfileMapper.updateEntity(personProfile, personProfileUpdateRequest);
         log.info("Updated person profile: profileExternalId={}, userExternalId={}",
@@ -80,7 +80,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
     public PersonProfileDto getProfileByExternalId(UUID profileExternalId) {
         return personProfileRepository.findByExternalId(profileExternalId)
                 .map(PersonProfileMapper::mapToDto)
-                .orElseThrow(() -> new PersonProfileNotExistException("Profile do not exists"));
+                .orElseThrow(() -> new PersonProfileNotFoundException("Profile do not exists"));
     }
 
     @Override
@@ -90,7 +90,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
 
         return personProfileRepository.findByUserAccount(user)
                 .map(PersonProfileMapper::mapToDto)
-                .orElseThrow(() -> new PersonProfileNotExistException("Profile do not exists"));
+                .orElseThrow(() -> new PersonProfileNotFoundException("Profile do not exists"));
     }
 
     @Override
@@ -99,7 +99,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         PersonProfile personProfile = personProfileRepository.findByUserAccount(user)
-                .orElseThrow(() -> new PersonProfileNotExistException("Profile do not exists"));
+                .orElseThrow(() -> new PersonProfileNotFoundException("Profile do not exists"));
 
         personProfileRepository.delete(personProfile);
         log.info("Delete profile: {} {}", personProfile.getFirstName(), personProfile.getLastName());

@@ -27,10 +27,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         String normalizedEmail = normalizeEmail(userAccountRequest.email());
         log.info("Creating user account for email {}", normalizedEmail);
 
-        if (userAccountRepository.existsByEmail(normalizedEmail)) {
-            log.warn("User account creation rejected: email {} already exists", normalizedEmail);
-            throw new UserAccountAlreadyExists("User with email " + normalizedEmail + " already exists");
-        }
+        validatePhoneAndEmail(normalizedEmail, userAccountRequest.phone());
 
         UserAccount userAccount = UserMapper.mapToEntity(new UserAccountRequest(
                 normalizedEmail,
@@ -66,6 +63,20 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void validatePhoneAndEmail(String normalizedEmail, String phone) {
+        if (userAccountRepository.existsByEmail(normalizedEmail)) {
+            log.warn("User account creation rejected: email {} already exists", normalizedEmail);
+            throw new UserAccountAlreadyExists("User with email " + normalizedEmail + " already exists");
+        }
+
+        if (phone != null && !phone.isBlank()) {
+            if (userAccountRepository.existsByPhone(phone)) {
+                log.warn("User account creation rejected: phone {} already exists", phone);
+                throw new UserAccountAlreadyExists("User with phone " + phone + " already exists");
+            }
+        }
     }
 
 }

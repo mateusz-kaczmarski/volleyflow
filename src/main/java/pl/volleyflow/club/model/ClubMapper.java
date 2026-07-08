@@ -7,8 +7,12 @@ import java.util.List;
 public class ClubMapper {
 
     public static Club mapToEntity(ClubRequest clubRequest) {
+        return mapToEntity(clubRequest, clubRequest.name());
+    }
+
+    public static Club mapToEntity(ClubRequest clubRequest, String normalizedName) {
         return Club.builder()
-                .name(clubRequest.name())
+                .name(normalizedName)
                 .avatar(clubRequest.avatar())
                 .description(clubRequest.description())
                 .build();
@@ -45,8 +49,12 @@ public class ClubMapper {
     }
 
     public static void updateEntity(Club club, ClubUpdateRequest request) {
+        updateEntity(club, request, request.name());
+    }
+
+    public static void updateEntity(Club club, ClubUpdateRequest request, String normalizedName) {
         if (request.name() != null) {
-            club.setName(request.name());
+            club.setName(normalizedName);
         }
         if (request.avatar() != null) {
             club.setAvatar(request.avatar());

@@ -5,11 +5,11 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.volleyflow.common.StringNormalizer;
 import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.model.*;
 import pl.volleyflow.user.repository.UserAccountRepository;
 
-import java.util.Locale;
 import java.util.Optional;
 
 @Service("userAccountService")
@@ -24,15 +24,16 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional
     public UserAccountDto create(UserAccountRequest userAccountRequest) {
-        String normalizedEmail = normalizeEmail(userAccountRequest.email());
+        String normalizedEmail = StringNormalizer.normalizeEmail(userAccountRequest.email());
+        String normalizedPhone = StringNormalizer.trimToNull(userAccountRequest.phone());
         log.info("Creating user account for email {}", normalizedEmail);
 
-        validatePhoneAndEmail(normalizedEmail, userAccountRequest.phone());
+        validatePhoneAndEmail(normalizedEmail, normalizedPhone);
 
         UserAccount userAccount = UserMapper.mapToEntity(new UserAccountRequest(
                 normalizedEmail,
                 userAccountRequest.password(),
-                userAccountRequest.phone()
+                normalizedPhone
         ));
         userAccount.setPasswordHash(passwordEncoder.encode(userAccountRequest.password()));
 
@@ -45,7 +46,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public UserAccountDto getBasicInfoByEmail(String email) {
-        String normalizedEmail = normalizeEmail(email);
+        String normalizedEmail = StringNormalizer.normalizeEmail(email);
 
         UserAccount userAccount = userAccountRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> {
@@ -58,11 +59,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional(readOnly = true)
     public Optional<UserAccount> findByEmail(String email) {
-        return userAccountRepository.findByEmail(normalizeEmail(email));
-    }
-
-    private String normalizeEmail(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
+        return userAccountRepository.findByEmail(StringNormalizer.normalizeEmail(email));
     }
 
     private void validatePhoneAndEmail(String normalizedEmail, String phone) {
@@ -71,11 +68,9 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new UserAccountAlreadyExists("User with email " + normalizedEmail + " already exists");
         }
 
-        if (phone != null && !phone.isBlank()) {
-            if (userAccountRepository.existsByPhone(phone)) {
-                log.warn("User account creation rejected: phone {} already exists", phone);
-                throw new UserAccountAlreadyExists("User with phone " + phone + " already exists");
-            }
+        if (phone != null && userAccountRepository.existsByPhone(phone)) {
+            log.warn("User account creation rejected: phone {} already exists", phone);
+            throw new UserAccountAlreadyExists("User with phone " + phone + " already exists");
         }
     }
 

@@ -11,6 +11,7 @@ import pl.volleyflow.clubmembership.model.ClubMembership;
 import pl.volleyflow.clubmembership.model.ClubMembershipMapper;
 import pl.volleyflow.clubmembership.model.ClubMembershipRole;
 import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
+import pl.volleyflow.common.StringNormalizer;
 import pl.volleyflow.personprofile.model.PersonProfile;
 import pl.volleyflow.personprofile.service.PersonProfileService;
 import pl.volleyflow.user.entity.UserAccount;
@@ -36,17 +37,18 @@ public class ClubServiceImpl implements ClubService {
     @Override
     @Transactional
     public ClubBasicDto createClub(ClubRequest clubRequest, String ownerEmail) {
-        log.info("Starting club creation: name={}, ownerEmail={}", clubRequest.name(), ownerEmail);
+        String normalizedName = StringNormalizer.trimRequired(clubRequest.name(), "club name");
+        log.info("Starting club creation: name={}, ownerEmail={}", normalizedName, ownerEmail);
 
-        if (clubRepository.existsByNameAndClubStatus(clubRequest.name(), ClubStatus.ACTIVE)) {
-            log.warn("Club creation rejected: active club with name {} already exists", clubRequest.name());
-            throw new ClubAlreadyExists("Club with name " + clubRequest.name() + " already exists");
+        if (clubRepository.existsByNameAndClubStatus(normalizedName, ClubStatus.ACTIVE)) {
+            log.warn("Club creation rejected: active club with name {} already exists", normalizedName);
+            throw new ClubAlreadyExists("Club with name " + normalizedName + " already exists");
         }
 
         UserAccount userAccount = userAccountService.findByEmail(ownerEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Club club = ClubMapper.mapToEntity(clubRequest);
+        Club club = ClubMapper.mapToEntity(clubRequest, normalizedName);
 
         Club savedClub = clubRepository.save(club);
         createOwnerMembership(savedClub, userAccount);
@@ -68,6 +70,7 @@ public class ClubServiceImpl implements ClubService {
     @Transactional
     public ClubBasicDto updateClub(ClubUpdateRequest clubUpdateRequest, UUID clubExternalId, String userEmail) {
         log.info("Starting club update: clubExternalId={}, userEmail={}", clubExternalId, userEmail);
+        String normalizedName = StringNormalizer.trimOptionalButRejectBlank(clubUpdateRequest.name(), "club name");
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -76,17 +79,17 @@ public class ClubServiceImpl implements ClubService {
 
         requireClubOwner(userAccount, club);
 
-        if (clubUpdateRequest.name() != null) {
-            clubRepository.findByNameAndClubStatus(clubUpdateRequest.name(), ClubStatus.ACTIVE)
+        if (normalizedName != null) {
+            clubRepository.findByNameAndClubStatus(normalizedName, ClubStatus.ACTIVE)
                     .filter(existingClub -> !existingClub.getExternalId().equals(clubExternalId))
                     .ifPresent(existingClub -> {
                         log.warn("Club update rejected: name {} already used by clubExternalId={}",
-                                clubUpdateRequest.name(), existingClub.getExternalId());
-                        throw new ClubAlreadyExists("Club with name " + clubUpdateRequest.name() + " already exists");
+                                normalizedName, existingClub.getExternalId());
+                        throw new ClubAlreadyExists("Club with name " + normalizedName + " already exists");
                     });
         }
 
-        ClubMapper.updateEntity(club, clubUpdateRequest);
+        ClubMapper.updateEntity(club, clubUpdateRequest, normalizedName);
         Club updatedClub = clubRepository.save(club);
         log.info("Updated club: clubExternalId={}, userEmail={}", updatedClub.getExternalId(), userEmail);
         return ClubMapper.mapToDto(updatedClub, ClubMembershipRole.OWNER.name());

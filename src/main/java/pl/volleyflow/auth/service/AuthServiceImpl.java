@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.auth.controller.UserLoginRequest;
 import pl.volleyflow.auth.dto.AuthResponse;
 import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
+import pl.volleyflow.common.StringNormalizer;
 import pl.volleyflow.personprofile.model.PersonProfileCreateRequest;
 import pl.volleyflow.personprofile.service.PersonProfileService;
 import pl.volleyflow.security.JwtService;
@@ -19,7 +20,6 @@ import pl.volleyflow.user.model.UserRegisterRequest;
 import pl.volleyflow.user.service.UserAccountService;
 
 import java.time.Instant;
-import java.util.Locale;
 
 @Service("authService")
 @RequiredArgsConstructor
@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse register(UserRegisterRequest request) {
-        String normalizedEmail = normalizeEmail(request.email());
+        String normalizedEmail = StringNormalizer.normalizeEmail(request.email());
         log.info("Starting user registration for email {}", normalizedEmail);
 
         UserAccountRequest userRequest = getUserAccountRequest(request);
@@ -54,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse login(UserLoginRequest request) {
-        String normalizedEmail = normalizeEmail(request.email());
+        String normalizedEmail = StringNormalizer.normalizeEmail(request.email());
         log.info("Login attempt for email {}", normalizedEmail);
 
         UserAccount userAccount = userAccountService.findByEmail(normalizedEmail)
@@ -79,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
 
     private UserAccountRequest getUserAccountRequest(UserRegisterRequest request) {
         return new UserAccountRequest(
-                normalizeEmail(request.email()),
+                StringNormalizer.normalizeEmail(request.email()),
                 request.password(),
                 request.phone()
         );
@@ -92,10 +92,6 @@ public class AuthServiceImpl implements AuthService {
                 request.displayName(),
                 request.jumpCm()
         );
-    }
-
-    private String normalizeEmail(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
     }
 
 }

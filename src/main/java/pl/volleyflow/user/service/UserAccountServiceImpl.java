@@ -5,6 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
 import pl.volleyflow.common.StringNormalizer;
 import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.model.*;
@@ -45,8 +46,8 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
-    public UserAccountDto getBasicInfoByEmail(String email) {
-        String normalizedEmail = StringNormalizer.normalizeEmail(email);
+    public UserAccountDto getBasicInfoByEmail(String userEmail) {
+        String normalizedEmail = StringNormalizer.normalizeEmail(userEmail);
 
         UserAccount userAccount = userAccountRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> {
@@ -58,8 +59,25 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<UserAccount> findByEmail(String email) {
-        return userAccountRepository.findByEmail(StringNormalizer.normalizeEmail(email));
+    public Optional<UserAccount> findByEmail(String userEmail) {
+        return userAccountRepository.findByEmail(StringNormalizer.normalizeEmail(userEmail));
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(UserChangePasswordRequest userChangePasswordRequest, String userEmail) {
+        String normalizedEmail = StringNormalizer.normalizeEmail(userEmail);
+
+        UserAccount userAccount = userAccountRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (passwordEncoder.matches(userChangePasswordRequest.oldPassword(), userAccount.getPasswordHash())) {
+            userAccount.setPasswordHash(passwordEncoder.encode(userChangePasswordRequest.newPassword()));
+            log.info("Successful changed password for user {}", userEmail);
+            return;
+        }
+        log.warn("Password change rejected for user {}: current password is incorrect", normalizedEmail);
+        throw new InvalidCredentialsException("Invalid credentials");
     }
 
     private void validatePhoneAndEmail(String normalizedEmail, String phone) {

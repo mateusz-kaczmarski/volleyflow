@@ -11,6 +11,17 @@ public final class StringNormalizer {
         return email.trim().toLowerCase(Locale.ROOT);
     }
 
+    public static String normalizeOptionalEmail(String email) {
+        if (email == null) {
+            return null;
+        }
+        String normalizedEmail = normalizeEmail(email);
+        if (normalizedEmail.isBlank()) {
+            throw new IllegalArgumentException("email cannot be blank");
+        }
+        return normalizedEmail;
+    }
+
     public static String trimToNull(String value) {
         if (value == null || value.isBlank()) {
             return null;

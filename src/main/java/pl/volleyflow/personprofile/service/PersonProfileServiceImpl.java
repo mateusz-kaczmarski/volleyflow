@@ -17,7 +17,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Log4j2
-@Transactional(readOnly = true)
 public class PersonProfileServiceImpl implements PersonProfileService {
 
     private final PersonProfileRepository personProfileRepository;
@@ -79,6 +78,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PersonProfileDto getProfileByExternalId(UUID profileExternalId) {
         return personProfileRepository.findByExternalId(profileExternalId)
                 .map(PersonProfileMapper::mapToDto)
@@ -86,6 +86,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PersonProfileDto getMyProfile(String userEmail) {
         UserAccount user = userAccountRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -96,6 +97,7 @@ public class PersonProfileServiceImpl implements PersonProfileService {
     }
 
     @Override
+    @Transactional
     public void deleteProfile(String userEmail) {
         UserAccount user = userAccountRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));

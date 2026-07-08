@@ -5,12 +5,14 @@ Backend application for managing amateur volleyball clubs, players and club memb
 ## Features
 
 - User registration and login with JWT authentication.
-- User profile creation.
+- User self-management: account details, account update, password change and soft delete.
+- User profile creation, update, lookup and guarded deletion.
 - Club creation, update, details view and soft delete.
 - Club owner membership created automatically when a club is created.
 - Player membership management inside a club.
 - Role-based club membership rules for `OWNER`, `TRAINER`, `PLAYER` and `STATISTIC`.
-- Validation for request payloads and basic business constraints.
+- Request validation with structured API error responses.
+- PostgreSQL schema migrations with Flyway.
 - PostgreSQL local environment with Docker Compose.
 - OpenAPI UI through Springdoc.
 
@@ -32,7 +34,7 @@ Backend application for managing amateur volleyball clubs, players and club memb
 
 The application is centered around four main areas:
 
-- `UserAccount` - application user used for authentication.
+- `UserAccount` - application user used for authentication and account management.
 - `PersonProfile` - personal profile connected to a user or player.
 - `Club` - volleyball club with lifecycle status.
 - `ClubMembership` - relation between a profile and a club with role, shirt number, positions and active dates.
@@ -46,9 +48,10 @@ src/main/java/pl/volleyflow
   auth             authentication API and service
   club             club API, service, repository and DTOs
   clubmembership   club member management
+  common           shared utilities
+  config           shared configuration and API error handling
   personprofile    user/player profile management
   security         JWT and Spring Security configuration
-  config           shared configuration
   user             user account model and service
 ```
 
@@ -72,6 +75,18 @@ On Windows:
 mvnw.cmd spring-boot:run
 ```
 
+Run tests:
+
+```bash
+./mvnw test
+```
+
+On Windows:
+
+```bash
+mvnw.cmd test
+```
+
 The API starts on the default Spring Boot port: `8080`.
 
 OpenAPI UI:
@@ -82,7 +97,7 @@ http://localhost:8080/swagger-ui/index.html
 
 ## Local Database
 
-The included `docker-compose.yml` starts PostgreSQL with:
+The included `docker-compose.yml` starts PostgreSQL with local fallback values:
 
 ```text
 database: volleyflow
@@ -91,8 +106,6 @@ password: admin
 port: 5432
 ```
 
-Current local configuration is stored in `src/main/resources/application.properties`.
-
 The application uses environment variable placeholders with local demo fallbacks:
 
 ```text
@@ -100,6 +113,12 @@ DB_URL=jdbc:postgresql://localhost:5432/volleyflow
 DB_USERNAME=admin
 DB_PASSWORD=admin
 JWT_SECRET=<base64-encoded-demo-secret>
+```
+
+Flyway migrations are stored in:
+
+```text
+src/main/resources/db/migration
 ```
 
 Seeded demo account:
@@ -119,10 +138,17 @@ Authentication:
 User:
 
 - `GET /api/users/me`
+- `PUT /api/users/me`
+- `PUT /api/users/me/password`
+- `DELETE /api/users/me`
 
 Profile:
 
 - `POST /api/profiles`
+- `GET /api/profiles/me`
+- `GET /api/profiles/{profileExternalId}`
+- `PUT /api/profiles`
+- `DELETE /api/profiles/me`
 
 Club:
 
@@ -151,18 +177,37 @@ Authorization: Bearer <jwt-token>
 
 Tokens are returned by the register and login endpoints.
 
+## Error Response
+
+The API returns a simple structured error response:
+
+```json
+{
+  "httpStatus": 400,
+  "message": "Validation failed",
+  "fieldErrors": [
+    {
+      "field": "email",
+      "rejectedValue": "wrong-email",
+      "message": "invalid email format"
+    }
+  ]
+}
+```
+
+For non-validation errors, `fieldErrors` is empty.
+
 ## Current Status
 
-The project is still before the final MVP. Core CRUD and membership flows are present, but the application still needs production-grade infrastructure work before being treated as complete.
+The current codebase represents an MVP version of the backend. Core authentication, user account management, profiles, clubs and club memberships are implemented. The project is still actively developed and is intended as a portfolio project rather than a production-ready system.
 
 Planned improvements:
 
 - Tests for main business flows.
-- Kafka and domain events for selected asynchronous processes.
-- Externalized secrets and environment-based configuration.
-- More detailed API error responses.
 - More complete OpenAPI documentation.
+- Match module with match schedule, status and results.
+- Domain events for selected asynchronous processes.
 
 ## Notes For Reviewers
 
-This repository is intended as a backend portfolio project. The goal is to show practical Spring Boot development: layered architecture, REST API design, JPA mappings, JWT security, transaction boundaries and basic domain rules for a sports club management system.
+This repository is intended as a backend portfolio project. The goal is to show practical Spring Boot development: layered architecture, REST API design, JPA mappings, JWT security, transaction boundaries, Flyway migrations and basic domain rules for a sports club management system.

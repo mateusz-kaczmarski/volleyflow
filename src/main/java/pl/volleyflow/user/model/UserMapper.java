@@ -20,7 +20,20 @@ public class UserMapper {
         return UserAccountDto.builder()
                 .externalId(userAccount.getExternalId())
                 .email(userAccount.getEmail())
+                .phone(userAccount.getPhone())
                 .build();
+    }
+
+    public static void updateEntity(UserAccount userAccount,
+                                    UserAccountUpdateRequest request,
+                                    String normalizedEmail,
+                                    String normalizedPhone) {
+        if (request.email() != null) {
+            userAccount.setEmail(normalizedEmail);
+        }
+        if (request.phone() != null) {
+            userAccount.setPhone(normalizedPhone);
+        }
     }
 
 }

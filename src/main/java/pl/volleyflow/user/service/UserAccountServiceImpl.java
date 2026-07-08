@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
 import pl.volleyflow.common.StringNormalizer;
 import pl.volleyflow.user.entity.UserAccount;
+import pl.volleyflow.user.entity.UserAccountStatus;
 import pl.volleyflow.user.model.*;
 import pl.volleyflow.user.repository.UserAccountRepository;
 
@@ -16,7 +17,6 @@ import java.util.Optional;
 @Service("userAccountService")
 @RequiredArgsConstructor
 @Log4j2
-@Transactional(readOnly = true)
 public class UserAccountServiceImpl implements UserAccountService {
 
     private final UserAccountRepository userAccountRepository;
@@ -46,6 +46,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserAccountDto getBasicInfoByEmail(String userEmail) {
         String normalizedEmail = StringNormalizer.normalizeEmail(userEmail);
 
@@ -80,6 +81,40 @@ public class UserAccountServiceImpl implements UserAccountService {
         throw new InvalidCredentialsException("Invalid credentials");
     }
 
+    @Override
+    @Transactional
+    public UserAccountDto updateUserAccount(UserAccountUpdateRequest userAccountUpdateRequest, String userEmail) {
+        String normalizedEmail = StringNormalizer.normalizeEmail(userEmail);
+        String normalizedUpdatedEmail = StringNormalizer.normalizeOptionalEmail(userAccountUpdateRequest.email());
+        String normalizedPhone = userAccountUpdateRequest.phone() == null
+                ? null
+                : StringNormalizer.trimToNull(userAccountUpdateRequest.phone());
+
+        UserAccount userAccount = userAccountRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        validateUpdatedEmailAndPhone(userAccount, normalizedUpdatedEmail, normalizedPhone, userAccountUpdateRequest.phone());
+
+        UserMapper.updateEntity(
+                userAccount,
+                userAccountUpdateRequest,
+                normalizedUpdatedEmail,
+                normalizedPhone);
+
+        return UserMapper.mapToDto(userAccount);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserAccount(String userEmail) {
+        String normalizedEmail = StringNormalizer.normalizeEmail(userEmail);
+        UserAccount userAccount = userAccountRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        userAccount.setStatus(UserAccountStatus.DELETED);
+        log.info("Deleted user account: email={}, externalId={}", normalizedEmail, userAccount.getExternalId());
+    }
+
     private void validatePhoneAndEmail(String normalizedEmail, String phone) {
         if (userAccountRepository.existsByEmail(normalizedEmail)) {
             log.warn("User account creation rejected: email {} already exists", normalizedEmail);
@@ -89,6 +124,24 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (phone != null && userAccountRepository.existsByPhone(phone)) {
             log.warn("User account creation rejected: phone {} already exists", phone);
             throw new UserAccountAlreadyExists("User with phone " + phone + " already exists");
+        }
+    }
+
+    private void validateUpdatedEmailAndPhone(UserAccount userAccount,
+                                              String normalizedUpdatedEmail,
+                                              String normalizedPhone,
+                                              String requestedPhone) {
+        if (normalizedUpdatedEmail != null
+                && userAccountRepository.existsByEmailAndIdNot(normalizedUpdatedEmail, userAccount.getId())) {
+            log.warn("User account update rejected: email {} already exists", normalizedUpdatedEmail);
+            throw new UserAccountAlreadyExists("User with email " + normalizedUpdatedEmail + " already exists");
+        }
+
+        if (requestedPhone != null
+                && normalizedPhone != null
+                && userAccountRepository.existsByPhoneAndIdNot(normalizedPhone, userAccount.getId())) {
+            log.warn("User account update rejected: phone {} already exists", normalizedPhone);
+            throw new UserAccountAlreadyExists("User with phone " + normalizedPhone + " already exists");
         }
     }
 

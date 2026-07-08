@@ -7,5 +7,6 @@ import java.util.UUID;
 @Builder
 public record UserAccountDto(
         UUID externalId,
-        String email) {
+        String email,
+        String phone) {
 }

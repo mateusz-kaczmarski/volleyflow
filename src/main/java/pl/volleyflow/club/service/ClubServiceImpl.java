@@ -61,7 +61,8 @@ public class ClubServiceImpl implements ClubService {
     public List<ClubBasicDto> getMyClubs(String userEmail) {
         UserAccount userAccount = userAccountService.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return clubMembershipRepository.findActiveByUser(userAccount.getExternalId(), ClubStatus.ACTIVE).stream()
+        return clubMembershipRepository.findActiveByUser(userAccount.getExternalId(), ClubStatus.ACTIVE)
+                .stream()
                 .map(membership -> ClubMapper.mapToDto(membership.getClub(), membership.getRole().name()))
                 .toList();
     }
@@ -109,7 +110,7 @@ public class ClubServiceImpl implements ClubService {
         requireClubOwner(userAccount, club);
 
         clubRepository.updateStatus(club.getId(), ClubStatus.ACTIVE, ClubStatus.DELETED, Instant.now());
-        clubMembershipRepository.deactivateAllByClubId(club.getId());
+        clubMembershipRepository.deactivateAllByClubId(club.getId(), Instant.now());
 
         log.info("Deleted club and deactivated memberships: clubExternalId={}, name={}, userEmail={}",
                 clubExternalId, club.getName(), userEmail);

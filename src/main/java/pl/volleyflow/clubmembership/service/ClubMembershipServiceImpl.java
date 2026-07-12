@@ -19,6 +19,7 @@ import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.model.UserNotFoundException;
 import pl.volleyflow.user.repository.UserAccountRepository;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -142,7 +143,8 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         int updatedRows = clubMembershipRepository.deactivateMembership(
                 clubExternalId,
                 membershipExternalId,
-                ClubStatus.ACTIVE
+                ClubStatus.ACTIVE,
+                Instant.now()
         );
         if (updatedRows == 0) {
             log.warn("Membership delete failed: membership not found or inactive. clubExternalId={}, membershipExternalId={}",

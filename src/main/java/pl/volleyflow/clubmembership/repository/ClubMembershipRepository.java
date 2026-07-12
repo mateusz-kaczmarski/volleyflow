@@ -8,6 +8,7 @@ import pl.volleyflow.club.model.ClubStatus;
 import pl.volleyflow.clubmembership.model.ClubMembership;
 import pl.volleyflow.clubmembership.model.ClubMembershipRole;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -179,23 +180,29 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
     @Query("""
             update ClubMembership cm
             set cm.active = false,
-                cm.updatedAt = current_timestamp
-            where cm.club.externalId = :clubId
+                cm.updatedAt = :updatedAt
+            where cm.club.id = (
+                  select c.id
+                  from Club c
+                  where c.externalId = :clubId
+                    and c.clubStatus = :clubStatus
+              )
               and cm.externalId = :membershipId
               and cm.active = true
-              and cm.club.clubStatus = :clubStatus
             """)
     int deactivateMembership(@Param("clubId") UUID clubId,
                              @Param("membershipId") UUID membershipId,
-                             @Param("clubStatus") ClubStatus clubStatus);
+                             @Param("clubStatus") ClubStatus clubStatus,
+                             @Param("updatedAt") Instant updatedAt);
 
     @Modifying
     @Query("""
             update ClubMembership cm
             set cm.active = false,
-                cm.updatedAt = current_timestamp
+                cm.updatedAt = :updatedAt
             where cm.club.id = :clubId
               and cm.active = true
             """)
-    int deactivateAllByClubId(@Param("clubId") Long clubId);
+    int deactivateAllByClubId(@Param("clubId") Long clubId,
+                              @Param("updatedAt") Instant updatedAt);
 }

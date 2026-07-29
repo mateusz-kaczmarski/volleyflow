@@ -19,7 +19,6 @@ import pl.volleyflow.user.service.UserAccountService;
 
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -85,7 +84,7 @@ class UserAccountControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(userAccountService).changePassword(any(UserChangePasswordRequest.class), eq(USER_EMAIL));
+        verify(userAccountService).changePassword(eq(request), eq(USER_EMAIL));
     }
 
     @Test
@@ -112,7 +111,7 @@ class UserAccountControllerTest {
                 .phone("987654321")
                 .build();
 
-        when(userAccountService.updateUserAccount(any(UserAccountUpdateRequest.class), eq(USER_EMAIL))).thenReturn(response);
+        when(userAccountService.updateUserAccount(eq(request), eq(USER_EMAIL))).thenReturn(response);
 
         mockMvc.perform(put("/api/users/me")
                         .principal(() -> USER_EMAIL)
@@ -123,7 +122,7 @@ class UserAccountControllerTest {
                 .andExpect(jsonPath("$.email").value("updated@example.pl"))
                 .andExpect(jsonPath("$.phone").value("987654321"));
 
-        verify(userAccountService).updateUserAccount(any(UserAccountUpdateRequest.class), eq(USER_EMAIL));
+        verify(userAccountService).updateUserAccount(eq(request), eq(USER_EMAIL));
     }
 
     @Test

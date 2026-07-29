@@ -18,7 +18,6 @@ import pl.volleyflow.security.JwtAuthenticationFilter;
 
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,7 +59,7 @@ class ClubControllerTest {
                 .userRole("OWNER")
                 .build();
 
-        when(clubService.createClub(any(ClubRequest.class), eq("owner@example.com")))
+        when(clubService.createClub(eq(request), eq("owner@example.com")))
                 .thenReturn(response);
 
         mockMvc.perform(post("/api/clubs")
@@ -74,7 +73,7 @@ class ClubControllerTest {
                 .andExpect(jsonPath("$.description").value("Demo club description"))
                 .andExpect(jsonPath("$.userRole").value("OWNER"));
 
-        verify(clubService).createClub(any(ClubRequest.class), eq("owner@example.com"));
+        verify(clubService).createClub(eq(request), eq("owner@example.com"));
     }
 
     @Test
@@ -104,7 +103,7 @@ class ClubControllerTest {
                 "Demo club description"
         );
 
-        when(clubService.createClub(any(ClubRequest.class), eq("owner@example.com")))
+        when(clubService.createClub(eq(request), eq("owner@example.com")))
                 .thenThrow(new ClubAlreadyExists("Club already exists"));
 
         mockMvc.perform(post("/api/clubs")

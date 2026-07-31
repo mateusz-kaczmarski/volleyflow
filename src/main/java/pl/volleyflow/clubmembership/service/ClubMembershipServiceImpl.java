@@ -70,9 +70,9 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
                                                     Boolean active) {
         requireClubMember(clubExternalId, userEmail);
 
-        return clubMembershipRepository.findByClubAndRole(
+        return clubMembershipRepository.findByClubAndRoles(
                         clubExternalId,
-                        ClubMembershipRole.PLAYER,
+                        List.of(ClubMembershipRole.PLAYER),
                         active,
                         ClubStatus.ACTIVE
                 )
@@ -154,6 +154,27 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         log.info("Deleted membership: clubExternalId={}, membershipExternalId={}", clubExternalId, membershipExternalId);
     }
 
+    @Override
+    public List<ClubMembershipDto> getAllClubMembers(UUID clubExternalId, String userEmail, Boolean active) {
+        Club club = clubRepository.findByExternalIdAndClubStatus(clubExternalId, ClubStatus.ACTIVE)
+                .orElseThrow(() -> new ClubNotFoundException("Club not found"));
+
+        UserAccount userAccount = userAccountRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        requireClubStaff(userAccount, club);
+
+        return clubMembershipRepository.findByClubAndRoles(
+                        clubExternalId,
+                        ClubMembershipRole.getAllRoles(),
+                        active,
+                        ClubStatus.ACTIVE
+                )
+                .stream()
+                .map(ClubMembershipMapper::mapToDto)
+                .toList();
+    }
+
     private void requireClubMember(UUID clubExternalId, String userEmail) {
         if (!clubMembershipRepository.isClubMember(clubExternalId, userEmail, ClubStatus.ACTIVE)) {
             log.warn("Club membership access denied: clubExternalId={}, userEmail={}", clubExternalId, userEmail);
@@ -166,6 +187,14 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
             log.warn("Club membership management denied: clubExternalId={}, userExternalId={}",
                     club.getExternalId(), userAccount.getExternalId());
             throw new ClubMembershipAccessDeniedException("You cannot manage memberships in this club");
+        }
+    }
+
+    private void requireClubStaff(UserAccount userAccount, Club club) {
+        if (!clubMembershipRepository.hasAnyRole(userAccount.getId(), club.getId(), ClubMembershipRole.getStaffRoles())) {
+            log.warn("Club members access denied: clubExternalId={}, userExternalId={}",
+                    club.getExternalId(), userAccount.getExternalId());
+            throw new ClubMembershipAccessDeniedException("You cannot view all members in this club");
         }
     }
 

@@ -59,4 +59,11 @@ public class ClubMembershipController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{clubExternalId}/members")
+    List<ClubMembershipDto> getMembersByClub(@PathVariable UUID clubExternalId,
+                                             @RequestParam(required = false) Boolean active,
+                                             Principal principal) {
+        return clubMembershipService.getAllClubMembers(clubExternalId, principal.getName(), active);
+    }
+
 }

@@ -22,4 +22,6 @@ public interface ClubMembershipService {
 
     void deleteMembership(UUID clubExternalId, UUID membershipExternalId, String userEmail);
 
+    List<ClubMembershipDto> getAllClubMembers(UUID clubExternalId, String userEmail, Boolean active);
+
 }

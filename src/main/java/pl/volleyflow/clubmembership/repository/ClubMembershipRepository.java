@@ -114,15 +114,15 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
             join fetch cm.club c
             join fetch cm.personProfile pp
             where c.externalId = :clubId
-              and cm.role = :role
+              and cm.role in (:roles)
               and (:active is null or cm.active = :active)
               and c.clubStatus = :clubStatus
             order by case when cm.shirtNumber is null then 1 else 0 end, cm.shirtNumber, cm.id
             """)
-    List<ClubMembership> findByClubAndRole(@Param("clubId") UUID clubId,
-                                           @Param("role") ClubMembershipRole role,
-                                           @Param("active") Boolean active,
-                                           @Param("clubStatus") ClubStatus clubStatus);
+    List<ClubMembership> findByClubAndRoles(@Param("clubId") UUID clubId,
+                                            @Param("roles") List<ClubMembershipRole> roles,
+                                            @Param("active") Boolean active,
+                                            @Param("clubStatus") ClubStatus clubStatus);
 
     @Query("""
             select cm
@@ -161,6 +161,18 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
     boolean hasRole(@Param("userId") long userId,
                     @Param("clubId") long clubId,
                     @Param("role") ClubMembershipRole role);
+
+    @Query("""
+            select count(cm) > 0
+            from ClubMembership cm
+            where cm.personProfile.userAccount.id = :userId
+              and cm.club.id = :clubId
+              and cm.role in (:roles)
+              and cm.active = true
+            """)
+    boolean hasAnyRole(@Param("userId") long userId,
+                       @Param("clubId") long clubId,
+                       @Param("roles") List<ClubMembershipRole> roles);
 
     @Query("""
             select cm

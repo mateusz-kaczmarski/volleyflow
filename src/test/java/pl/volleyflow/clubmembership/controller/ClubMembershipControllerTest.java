@@ -234,6 +234,34 @@ class ClubMembershipControllerTest {
     }
 
     @Test
+    void shouldReturnMembersByClub() throws Exception {
+        UUID uuid = UUID.randomUUID();
+        ClubMembershipDto clubMembershipDto = ClubMembershipDto.builder()
+                .clubExternalId(uuid)
+                .role(ClubMembershipRole.TRAINER)
+                .firstName("first name")
+                .lastName("last name")
+                .active(true)
+                .build();
+
+        when(clubMembershipService.getAllClubMembers(eq(uuid), eq("owner@example.pl"), eq(true)))
+                .thenReturn(List.of(clubMembershipDto));
+
+        mockMvc.perform(get("/api/memberships/{clubExternalId}/members", uuid)
+                        .param("active", "true")
+                        .principal(() -> "owner@example.pl")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].role").value("TRAINER"))
+                .andExpect(jsonPath("$[0].firstName").value("first name"))
+                .andExpect(jsonPath("$[0].lastName").value("last name"))
+                .andExpect(jsonPath("$[0].active").value(true));
+
+        verify(clubMembershipService).getAllClubMembers(eq(uuid), eq("owner@example.pl"), eq(true));
+    }
+
+    @Test
     void shouldReturnBadRequestWhenFirstNameIsBlank() throws Exception {
         UUID uuid = UUID.randomUUID();
         ClubMembershipCreateRequest request = new ClubMembershipCreateRequest(

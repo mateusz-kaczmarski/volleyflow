@@ -24,7 +24,6 @@ public record ClubMembershipUpdateRequest(
         @Max(value = 99, message = "shirt number must be less than 100")
         Integer shirtNumber,
 
-        @NotEmpty(message = "positions cannot be empty")
         Set<MemberPosition> positions,
 
         LocalDate activeFrom,

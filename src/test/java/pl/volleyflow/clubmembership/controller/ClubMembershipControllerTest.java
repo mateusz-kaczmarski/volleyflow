@@ -292,7 +292,7 @@ class ClubMembershipControllerTest {
     private static ClubMembershipCreateRequest getClubMembershipCreateRequest(UUID uuid) {
         return new ClubMembershipCreateRequest(
                 uuid,
-                ClubMembershipRole.OWNER,
+                ClubMembershipRole.PLAYER,
                 "first name",
                 "last name",
                 "display name",

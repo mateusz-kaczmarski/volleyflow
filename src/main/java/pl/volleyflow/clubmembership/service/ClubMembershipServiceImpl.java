@@ -22,6 +22,7 @@ import pl.volleyflow.user.repository.UserAccountRepository;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -208,6 +209,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
 
     private void validateCreateMembership(ClubMembershipCreateRequest request) {
         validateMembershipRole(request.role());
+        validateRoleDetails(request.role(), request.shirtNumber(), request.positions());
         validateMembershipDates(request.activeFrom(), request.activeTo());
 
         if (clubMembershipRepository.existsPlayer(
@@ -220,7 +222,8 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
             throw new ClubMembershipAlreadyExistsException("Player already exists in this club");
         }
 
-        if (request.shirtNumber() != null
+        if (ClubMembershipRole.PLAYER.equals(request.role())
+                && request.shirtNumber() != null
                 && clubMembershipRepository.existsShirtNumber(
                 request.clubExternalId(),
                 request.shirtNumber(),
@@ -236,6 +239,7 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
             UUID membershipExternalId,
             ClubMembershipUpdateRequest request) {
         validateMembershipRole(request.role());
+        validateRoleDetails(request.role(), request.shirtNumber(), request.positions());
         validateMembershipDates(request.activeFrom(), request.activeTo());
 
         if (clubMembershipRepository.existsPlayerExcept(
@@ -249,7 +253,8 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
             throw new ClubMembershipAlreadyExistsException("Player already exists in this club");
         }
 
-        if (request.shirtNumber() != null
+        if (ClubMembershipRole.PLAYER.equals(request.role())
+                && request.shirtNumber() != null
                 && clubMembershipRepository.existsShirtNumberExcept(
                 clubExternalId,
                 request.shirtNumber(),
@@ -265,6 +270,31 @@ public class ClubMembershipServiceImpl implements ClubMembershipService {
         if (ClubMembershipRole.OWNER.equals(role)) {
             log.warn("Membership role validation rejected: OWNER cannot be assigned through membership endpoint");
             throw new ClubMembershipAccessDeniedException("Owner role cannot be assigned through membership endpoint");
+        }
+    }
+
+    private void validateRoleDetails(ClubMembershipRole role, Integer shirtNumber, Set<MemberPosition> positions) {
+        if (ClubMembershipRole.PLAYER.equals(role)) {
+            validatePlayerDetails(positions);
+            return;
+        }
+
+        validateNonPlayerDetails(shirtNumber, positions);
+    }
+
+    private void validatePlayerDetails(Set<MemberPosition> positions) {
+        if (positions == null || positions.isEmpty()) {
+            throw new IllegalArgumentException("Player must have at least one position");
+        }
+    }
+
+    private void validateNonPlayerDetails(Integer shirtNumber, Set<MemberPosition> positions) {
+        if (shirtNumber != null) {
+            throw new IllegalArgumentException("Only player can have shirt number");
+        }
+
+        if (positions != null && !positions.isEmpty()) {
+            throw new IllegalArgumentException("Only player can have positions");
         }
     }
 

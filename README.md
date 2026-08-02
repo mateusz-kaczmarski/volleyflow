@@ -125,7 +125,7 @@ Seeded demo account:
 
 ```text
 email: demo.owner@example.com
-password: password
+password: demo
 ```
 
 ## Main Endpoints

@@ -175,6 +175,16 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
                        @Param("roles") List<ClubMembershipRole> roles);
 
     @Query("""
+            select count(cm) > 0
+            from ClubMembership cm
+            where cm.personProfile.userAccount.id = :userId
+              and cm.club.id = :clubId
+              and cm.active = true
+            """)
+    boolean hasActiveMembership(@Param("userId") long userId,
+                                @Param("clubId") long clubId);
+
+    @Query("""
             select cm
             from ClubMembership cm
             join fetch cm.club c

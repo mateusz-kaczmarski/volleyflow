@@ -7,6 +7,7 @@ import pl.volleyflow.user.model.UserAccountUpdateRequest;
 import pl.volleyflow.user.model.UserChangePasswordRequest;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface UserAccountService {
 
@@ -15,6 +16,8 @@ public interface UserAccountService {
     UserAccountDto getBasicInfoByEmail(String userEmail);
 
     Optional<UserAccount> findByEmail(String userEmail);
+
+    Optional<UserAccount> findByExternalId(UUID externalId);
 
     void changePassword(UserChangePasswordRequest userChangePasswordRequest, String userEmail);
 

@@ -13,6 +13,7 @@ import pl.volleyflow.user.model.*;
 import pl.volleyflow.user.repository.UserAccountRepository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service("userAccountService")
 @RequiredArgsConstructor
@@ -62,6 +63,12 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional(readOnly = true)
     public Optional<UserAccount> findByEmail(String userEmail) {
         return userAccountRepository.findByEmail(StringNormalizer.normalizeEmail(userEmail));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UserAccount> findByExternalId(UUID externalId) {
+        return userAccountRepository.findByExternalId(externalId);
     }
 
     @Override

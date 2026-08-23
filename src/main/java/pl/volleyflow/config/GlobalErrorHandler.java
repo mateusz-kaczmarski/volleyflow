@@ -15,6 +15,7 @@ import pl.volleyflow.club.model.ClubNotFoundException;
 import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
 import pl.volleyflow.clubmembership.model.exceptions.ClubMembershipAlreadyExistsException;
 import pl.volleyflow.clubmembership.model.exceptions.ClubMembershipNotFoundException;
+import pl.volleyflow.match.model.exceptions.MatchNotFoundException;
 import pl.volleyflow.personprofile.model.PersonProfileAlreadyExistsException;
 import pl.volleyflow.personprofile.model.PersonProfileInUseException;
 import pl.volleyflow.personprofile.model.PersonProfileNotFoundException;
@@ -72,6 +73,11 @@ public class GlobalErrorHandler {
     public ResponseEntity<GlobalErrorResponse> handleClubMembershipAlreadyExists(
             ClubMembershipAlreadyExistsException ex) {
         return error(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(MatchNotFoundException.class)
+    public ResponseEntity<GlobalErrorResponse> handleMatchNotFound(MatchNotFoundException ex) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(PersonProfileAlreadyExistsException.class)

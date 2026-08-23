@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import pl.volleyflow.user.entity.UserAccount;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface UserAccountRepository extends JpaRepository<UserAccount, Long> {
 
@@ -16,5 +17,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     boolean existsByPhoneAndIdNot(String phone, Long id);
 
     Optional<UserAccount> findByEmail(String email);
+
+    Optional<UserAccount> findByExternalId(UUID externalId);
 
 }

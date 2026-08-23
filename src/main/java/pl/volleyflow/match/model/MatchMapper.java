@@ -9,8 +9,11 @@ import pl.volleyflow.user.entity.UserAccount;
 
 public class MatchMapper {
 
-    public static MatchEntity mapToEntity(MatchCreateRequest request, Club homeClub, Club awayClub,
-                                          UserAccount createdBy, Club createdByClub) {
+    public static MatchEntity mapToEntity(MatchCreateRequest request,
+                                          Club homeClub,
+                                          Club awayClub,
+                                          UserAccount createdBy,
+                                          Club createdByClub) {
         MatchEntity match = MatchEntity.builder()
                 .scheduledAt(request.scheduledAt())
                 .location(mapToAddress(request.matchLocation()))
@@ -22,6 +25,16 @@ public class MatchMapper {
         match.addTeam(mapToTeam(awayClub, MatchSide.AWAY));
 
         return match;
+    }
+
+    public static void updateEntity(MatchEntity match,
+                                    MatchUpdateRequest request,
+                                    Club homeClub,
+                                    Club awayClub) {
+        match.setScheduledAt(request.scheduledAt());
+        match.setLocation(mapToAddress(request.location()));
+        updateTeam(match, homeClub, MatchSide.HOME);
+        updateTeam(match, awayClub, MatchSide.AWAY);
     }
 
     public static MatchDto mapToDto(MatchEntity match) {
@@ -43,6 +56,16 @@ public class MatchMapper {
                 .club(club)
                 .side(side)
                 .build();
+    }
+
+    private static void updateTeam(MatchEntity match, Club club, MatchSide side) {
+        match.getTeams().stream()
+                .filter(team -> side.equals(team.getSide()))
+                .findFirst()
+                .ifPresentOrElse(
+                        team -> team.setClub(club),
+                        () -> match.addTeam(mapToTeam(club, side))
+                );
     }
 
     private static MatchAddress mapToAddress(MatchLocation location) {

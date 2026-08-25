@@ -15,4 +15,6 @@ public interface MatchService {
 
     List<MatchDto> getClubMatches(UUID clubExternalId, String email);
 
+    MatchDto getMatch(UUID matchExternalId, String email);
+
 }

@@ -111,8 +111,22 @@ public class MatchServiceImpl implements MatchService {
                 .toList();
     }
 
-    private Club getOrElseThrow(UUID request) {
-        return clubRepository.findByExternalIdAndClubStatus(request, ClubStatus.ACTIVE)
+    @Transactional(readOnly = true)
+    @Override
+    public MatchDto getMatch(UUID matchExternalId, String email) {
+        UserAccount userAccount = userAccountService.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        MatchEntity match = matchRepository.findByExternalId(matchExternalId)
+                .orElseThrow(() -> new MatchNotFoundException("Match not found"));
+
+        requireActiveMembership(userAccount, match.getCreatedByClub());
+
+        return MatchMapper.mapToDto(match);
+    }
+
+    private Club getOrElseThrow(UUID clubExternalId) {
+        return clubRepository.findByExternalIdAndClubStatus(clubExternalId, ClubStatus.ACTIVE)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
     }
 

@@ -41,5 +41,11 @@ public class MatchController {
         return ResponseEntity.ok(matchService.getClubMatches(clubExternalId, principal.getName()));
     }
 
+    @GetMapping("/{matchExternalId}")
+    ResponseEntity<MatchDto> getMatch(@PathVariable UUID matchExternalId,
+                                      Principal principal) {
+        return ResponseEntity.ok(matchService.getMatch(matchExternalId, principal.getName()));
+    }
+
 
 }

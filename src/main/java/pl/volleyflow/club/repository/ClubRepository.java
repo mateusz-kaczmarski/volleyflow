@@ -8,6 +8,7 @@ import pl.volleyflow.club.model.Club;
 import pl.volleyflow.club.model.ClubStatus;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,5 +32,15 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
                      @Param("currentStatus") ClubStatus currentStatus,
                      @Param("newStatus") ClubStatus newStatus,
                      @Param("updatedAt") Instant updatedAt);
+
+    @Query("""
+            select c
+            from Club c
+            where lower(c.name) like lower(concat('%', :query, '%'))
+              and c.clubStatus = :status
+            order by c.name
+            """)
+    List<Club> findActiveByNameContaining(@Param("query") String query,
+                                          @Param("status") ClubStatus status);
 
 }

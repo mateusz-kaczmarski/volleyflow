@@ -148,6 +148,17 @@ public class ClubServiceImpl implements ClubService {
         return ClubMapper.mapToDetailsDto(club, userRole, members);
     }
 
+    @Override
+    public List<ClubBasicDto> getClubsByName(String clubName, String userEmail) {
+        UserAccount userAccount = userAccountService.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        return clubRepository.findActiveByNameContaining(clubName.trim(), ClubStatus.ACTIVE)
+                .stream()
+                .map(ClubMapper::mapToDto)
+                .toList();
+    }
+
 
     private void createOwnerMembership(Club club, UserAccount userAccount) {
         PersonProfile personProfile = personProfileService.findByUserAccount(userAccount)

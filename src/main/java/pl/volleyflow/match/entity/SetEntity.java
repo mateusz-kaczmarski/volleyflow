@@ -37,6 +37,9 @@ public class SetEntity {
     @Column(name = "away_points", nullable = false)
     private int awayPoints;
 
+    @Column(name = "video_url", length = 2048)
+    private String videoUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

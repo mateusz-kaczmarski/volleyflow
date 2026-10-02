@@ -27,7 +27,8 @@ public final class SetMapper {
                 set.getExternalId(),
                 set.getSetNumber(),
                 set.getHomePoints(),
-                set.getAwayPoints());
+                set.getAwayPoints(),
+                set.getVideoUrl());
     }
 
 }

@@ -40,6 +40,9 @@ public class Match {
     @Column(name = "finished_at")
     private Instant finishedAt;
 
+    @Column(name = "mvp_player_external_id")
+    private UUID mvpPlayerExternalId;
+
     @Embedded
     private MatchAddress location;
 

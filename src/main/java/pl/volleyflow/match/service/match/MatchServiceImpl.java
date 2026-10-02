@@ -124,6 +124,23 @@ public class MatchServiceImpl implements MatchService {
         return MatchMapper.mapToDto(match);
     }
 
+    @Transactional
+    @Override
+    public MatchDto updateMvp(UUID matchExternalId, UUID clubExternalId, UUID mvpPlayerExternalId, String email) {
+        UserAccount userAccount = getUserOrThrow(email);
+        Club club = getClubByExternalId(clubExternalId);
+        Match match = getMatchOrThrow(matchExternalId);
+
+        requireStaffRole(userAccount, club);
+        requireClubParticipatesInMatch(club, match);
+        if (mvpPlayerExternalId != null && !clubMembershipRepository.hasActivePlayer(club.getId(), mvpPlayerExternalId)) {
+            throw new IllegalArgumentException("MVP player must be an active player of the club");
+        }
+
+        match.setMvpPlayerExternalId(mvpPlayerExternalId);
+        return MatchMapper.mapToDto(match);
+    }
+
 
 
     @Transactional

@@ -18,6 +18,7 @@ public record MatchDto(
         Instant scheduledAt,
         Instant startedAt,
         Instant finishedAt,
+        UUID mvpPlayerExternalId,
         MatchLocation matchLocation,
         List<SetDto> sets) {
 }

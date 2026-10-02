@@ -82,6 +82,25 @@ public class SetServiceImpl implements SetService {
 
     @Transactional
     @Override
+    public SetDto updateSetVideo(UUID matchExternalId,
+                                 UUID clubExternalId,
+                                 UUID setExternalId,
+                                 String videoUrl,
+                                 String email) {
+        UserAccount userAccount = getUserOrThrow(email);
+        Match match = getMatchOrThrow(matchExternalId);
+        SetEntity set = findSetOrThrow(setExternalId, match);
+        Club club = getClubByExternalId(clubExternalId);
+
+        requireStaffRole(userAccount, club);
+        requireClubParticipatesInMatch(club, match);
+        set.setVideoUrl(videoUrl == null || videoUrl.isBlank() ? null : videoUrl.trim());
+
+        return SetMapper.mapToDto(set);
+    }
+
+    @Transactional
+    @Override
     public void deleteSet(UUID matchExternalId, UUID clubExternalId, UUID setExternalId, String email) {
         UserAccount userAccount = getUserOrThrow(email);
         Match match = getMatchOrThrow(matchExternalId);

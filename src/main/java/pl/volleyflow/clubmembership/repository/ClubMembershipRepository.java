@@ -185,6 +185,17 @@ public interface ClubMembershipRepository extends JpaRepository<ClubMembership, 
                                 @Param("clubId") long clubId);
 
     @Query("""
+            select count(cm) > 0
+            from ClubMembership cm
+            where cm.club.id = :clubId
+              and cm.personProfile.externalId = :playerExternalId
+              and cm.role = pl.volleyflow.clubmembership.model.ClubMembershipRole.PLAYER
+              and cm.active = true
+            """)
+    boolean hasActivePlayer(@Param("clubId") long clubId,
+                            @Param("playerExternalId") UUID playerExternalId);
+
+    @Query("""
             select cm
             from ClubMembership cm
             join fetch cm.club c

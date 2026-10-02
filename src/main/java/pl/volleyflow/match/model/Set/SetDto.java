@@ -6,5 +6,6 @@ public record SetDto(
         UUID externalId,
         Integer setNumber,
         Integer homePoints,
-        Integer awayPoints) {
+        Integer awayPoints,
+        String videoUrl) {
 }

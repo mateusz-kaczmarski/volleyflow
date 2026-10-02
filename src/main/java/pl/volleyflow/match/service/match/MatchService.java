@@ -18,6 +18,8 @@ public interface MatchService {
 
     MatchDto getMatchDetails(UUID matchExternalId, UUID clubExternalId, String email);
 
+    MatchDto updateMvp(UUID matchExternalId, UUID clubExternalId, UUID mvpPlayerExternalId, String email);
+
     void finishMatch(UUID matchExternalId, String email);
 
 }

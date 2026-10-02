@@ -54,6 +54,7 @@ public final class MatchMapper {
                 .scheduledAt(match.getScheduledAt())
                 .startedAt(match.getStartedAt())
                 .finishedAt(match.getFinishedAt())
+                .mvpPlayerExternalId(match.getMvpPlayerExternalId())
                 .matchLocation(mapToLocation(match))
                 .sets(match.getSets().stream()
                         .sorted(Comparator.comparing(SetEntity::getSetNumber))

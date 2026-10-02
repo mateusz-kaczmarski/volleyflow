@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.volleyflow.match.model.Match.MatchCreateRequest;
 import pl.volleyflow.match.model.Match.MatchDto;
+import pl.volleyflow.match.model.Match.MatchMvpUpdateRequest;
 import pl.volleyflow.match.model.Match.MatchUpdateRequest;
 import pl.volleyflow.match.model.Set.*;
 import pl.volleyflow.match.service.match.MatchService;
@@ -53,7 +54,16 @@ public class MatchController {
         return ResponseEntity.ok().body(matchService.getMatchDetails(
                 matchExternalId,
                 clubExternalId,
-                principal.getName()));
+                 principal.getName()));
+    }
+
+    @PutMapping("/{clubExternalId}/{matchExternalId}/mvp")
+    ResponseEntity<MatchDto> updateMvp(@PathVariable UUID clubExternalId,
+                                       @PathVariable UUID matchExternalId,
+                                       @RequestBody MatchMvpUpdateRequest request,
+                                       Principal principal) {
+        return ResponseEntity.ok(matchService.updateMvp(
+                matchExternalId, clubExternalId, request.mvpPlayerExternalId(), principal.getName()));
     }
 
     @PostMapping("{clubExternalId}/{matchExternalId}/set")
@@ -76,6 +86,16 @@ public class MatchController {
                                      Principal principal) {
         return ResponseEntity.ok(setService.updateSet(
                 matchExternalId, clubExternalId, setExternalId, request, principal.getName()));
+    }
+
+    @PutMapping("/{clubExternalId}/{matchExternalId}/set/{setExternalId}/video")
+    ResponseEntity<SetDto> updateSetVideo(@PathVariable UUID clubExternalId,
+                                           @PathVariable UUID matchExternalId,
+                                           @PathVariable UUID setExternalId,
+                                           @Valid @RequestBody SetVideoUpdateRequest request,
+                                           Principal principal) {
+        return ResponseEntity.ok(setService.updateSetVideo(
+                matchExternalId, clubExternalId, setExternalId, request.videoUrl(), principal.getName()));
     }
 
     @PostMapping("/{matchExternalId}/finish")

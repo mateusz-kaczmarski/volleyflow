@@ -19,6 +19,12 @@ public interface SetService {
                      SetUpdateRequest setUpdateRequest,
                      String email);
 
+    SetDto updateSetVideo(UUID matchExternalId,
+                          UUID clubExternalId,
+                          UUID setExternalId,
+                          String videoUrl,
+                          String email);
+
     void deleteSet(UUID matchExternalId,
                    UUID clubExternalId,
                    UUID setExternalId,

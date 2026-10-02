@@ -15,7 +15,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MatchSet {
+public class SetEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +26,7 @@ public class MatchSet {
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "match_id", nullable = false)
-    private MatchEntity match;
+    private Match match;
 
     @Column(name = "set_number", nullable = false)
     private int setNumber;

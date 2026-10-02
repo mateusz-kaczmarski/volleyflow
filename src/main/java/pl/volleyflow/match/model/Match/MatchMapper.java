@@ -1,20 +1,27 @@
-package pl.volleyflow.match.model;
+package pl.volleyflow.match.model.Match;
 
 import pl.volleyflow.club.model.Club;
 import pl.volleyflow.club.model.ClubMapper;
 import pl.volleyflow.match.entity.MatchAddress;
-import pl.volleyflow.match.entity.MatchEntity;
+import pl.volleyflow.match.entity.Match;
+import pl.volleyflow.match.entity.SetEntity;
 import pl.volleyflow.match.entity.MatchTeam;
+import pl.volleyflow.match.model.Set.SetMapper;
 import pl.volleyflow.user.entity.UserAccount;
 
-public class MatchMapper {
+import java.util.Comparator;
 
-    public static MatchEntity mapToEntity(MatchCreateRequest request,
-                                          Club homeClub,
-                                          Club awayClub,
-                                          UserAccount createdBy,
-                                          Club createdByClub) {
-        MatchEntity match = MatchEntity.builder()
+public final class MatchMapper {
+
+    private MatchMapper() {
+    }
+
+    public static Match mapToEntity(MatchCreateRequest request,
+                                    Club homeClub,
+                                    Club awayClub,
+                                    UserAccount createdBy,
+                                    Club createdByClub) {
+        Match match = Match.builder()
                 .scheduledAt(request.scheduledAt())
                 .location(mapToAddress(request.matchLocation()))
                 .createdBy(createdBy)
@@ -27,7 +34,7 @@ public class MatchMapper {
         return match;
     }
 
-    public static void updateEntity(MatchEntity match,
+    public static void updateEntity(Match match,
                                     MatchUpdateRequest request,
                                     Club homeClub,
                                     Club awayClub) {
@@ -37,7 +44,7 @@ public class MatchMapper {
         updateTeam(match, awayClub, MatchSide.AWAY);
     }
 
-    public static MatchDto mapToDto(MatchEntity match) {
+    public static MatchDto mapToDto(Match match) {
         return MatchDto.builder()
                 .externalId(match.getExternalId())
                 .createdByClub(ClubMapper.mapToDto(match.getCreatedByClub()))
@@ -48,6 +55,10 @@ public class MatchMapper {
                 .startedAt(match.getStartedAt())
                 .finishedAt(match.getFinishedAt())
                 .matchLocation(mapToLocation(match))
+                .sets(match.getSets().stream()
+                        .sorted(Comparator.comparing(SetEntity::getSetNumber))
+                        .map(SetMapper::mapToDto)
+                        .toList())
                 .build();
     }
 
@@ -58,7 +69,7 @@ public class MatchMapper {
                 .build();
     }
 
-    private static void updateTeam(MatchEntity match, Club club, MatchSide side) {
+    private static void updateTeam(Match match, Club club, MatchSide side) {
         match.getTeams().stream()
                 .filter(team -> side.equals(team.getSide()))
                 .findFirst()
@@ -77,7 +88,7 @@ public class MatchMapper {
                 .build();
     }
 
-    private static MatchTeamDto findTeamDto(MatchEntity match, MatchSide side) {
+    private static MatchTeamDto findTeamDto(Match match, MatchSide side) {
         return match.getTeams().stream()
                 .filter(team -> side.equals(team.getSide()))
                 .findFirst()
@@ -93,7 +104,7 @@ public class MatchMapper {
                 .build();
     }
 
-    private static MatchLocation mapToLocation(MatchEntity match) {
+    private static MatchLocation mapToLocation(Match match) {
         MatchAddress location = match.getLocation();
         return MatchLocation.builder()
                 .city(location.getCity())

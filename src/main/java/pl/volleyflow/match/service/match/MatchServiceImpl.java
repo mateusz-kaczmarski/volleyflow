@@ -1,7 +1,8 @@
-package pl.volleyflow.match.service;
+package pl.volleyflow.match.service.match;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.club.model.Club;
@@ -11,14 +12,16 @@ import pl.volleyflow.club.repository.ClubRepository;
 import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
 import pl.volleyflow.clubmembership.model.ClubMembershipRole;
 import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
-import pl.volleyflow.match.entity.MatchEntity;
-import pl.volleyflow.match.model.MatchCreateRequest;
-import pl.volleyflow.match.model.MatchDto;
-import pl.volleyflow.match.model.MatchMapper;
-import pl.volleyflow.match.model.MatchUpdateRequest;
+import pl.volleyflow.match.entity.Match;
+import pl.volleyflow.match.entity.SetEntity;
+import pl.volleyflow.match.model.Match.*;
 import pl.volleyflow.match.model.exceptions.MatchNotFoundException;
 import pl.volleyflow.match.model.exceptions.MatchTeamsMustBeDifferentException;
+import pl.volleyflow.match.model.exceptions.SetException;
+import pl.volleyflow.match.model.exceptions.SetNotFoundException;
 import pl.volleyflow.match.repository.MatchRepository;
+import pl.volleyflow.match.repository.SetRepository;
+import pl.volleyflow.match.repository.SetStatisticsRepository;
 import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.model.UserNotFoundException;
 import pl.volleyflow.user.service.UserAccountService;
@@ -35,21 +38,22 @@ public class MatchServiceImpl implements MatchService {
     private final ClubRepository clubRepository;
     private final MatchRepository matchRepository;
     private final ClubMembershipRepository clubMembershipRepository;
+    private final SetRepository setRepository;
+    private final SetStatisticsRepository setStatisticsRepository;
 
     @Transactional
     @Override
     public MatchDto createMatch(MatchCreateRequest request, String email) {
-        UserAccount userAccount = userAccountService.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        UserAccount userAccount = getUserOrThrow(email);
 
         log.info("Creating match requested by user {}. Home club externalId: {}, away club externalId: {}, scheduled at: {}",
                 userAccount.getEmail(), request.homeClubExternalId(), request.awayClubExternalId(), request.scheduledAt());
 
-        Club homeClub = getOrElseThrow(request.homeClubExternalId());
+        Club homeClub = getClubByExternalId(request.homeClubExternalId());
 
-        Club awayClub = getOrElseThrow(request.awayClubExternalId());
+        Club awayClub = getClubByExternalId(request.awayClubExternalId());
 
-        Club createdByClub = getOrElseThrow(request.createdByClubExternalId());
+        Club createdByClub = getClubByExternalId(request.createdByClubExternalId());
 
         log.info("Creating match for clubs. Home club id: {}, away club id: {}", homeClub.getId(), awayClub.getId());
 
@@ -57,8 +61,8 @@ public class MatchServiceImpl implements MatchService {
         validateClubParticipatesInMatch(createdByClub, homeClub, awayClub);
         requireStaffRole(userAccount, createdByClub);
 
-        MatchEntity match = MatchMapper.mapToEntity(request, homeClub, awayClub, userAccount, createdByClub);
-        MatchEntity savedMatch = matchRepository.save(match);
+        Match match = MatchMapper.mapToEntity(request, homeClub, awayClub, userAccount, createdByClub);
+        Match savedMatch = matchRepository.save(match);
 
         log.info("Successfully created match {} by user {} for club {}",
                 savedMatch.getExternalId(), userAccount.getId(), createdByClub.getId());
@@ -69,19 +73,17 @@ public class MatchServiceImpl implements MatchService {
     @Transactional
     @Override
     public MatchDto updateMatch(UUID matchExternalId, MatchUpdateRequest request, String email) {
-        UserAccount userAccount = userAccountService.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        UserAccount userAccount = getUserOrThrow(email);
 
         log.info("Updating match requested by user {}. Home club externalId: {}, away club externalId: {}, scheduled at: {}",
                 userAccount.getEmail(), request.homeClubExternalId(), request.awayClubExternalId(), request.scheduledAt());
 
-        MatchEntity match = matchRepository.findByExternalId(matchExternalId)
-                .orElseThrow(() -> new MatchNotFoundException("Match not found"));
+        Match match = findMatchOrThrow(matchExternalId);
 
         requireStaffRole(userAccount, match.getCreatedByClub());
 
-        Club homeClub = getOrElseThrow(request.homeClubExternalId());
-        Club awayClub = getOrElseThrow(request.awayClubExternalId());
+        Club homeClub = getClubByExternalId(request.homeClubExternalId());
+        Club awayClub = getClubByExternalId(request.awayClubExternalId());
 
         validateDifferentClubs(homeClub, awayClub);
         validateClubParticipatesInMatch(match.getCreatedByClub(), homeClub, awayClub);
@@ -89,7 +91,7 @@ public class MatchServiceImpl implements MatchService {
         log.info("Updating match for clubs. Home club id: {}, away club id: {}", homeClub.getId(), awayClub.getId());
 
         MatchMapper.updateEntity(match, request, homeClub, awayClub);
-        MatchEntity savedMatch = matchRepository.save(match);
+        Match savedMatch = matchRepository.save(match);
 
         log.info("Successfully update match {} by user {} for club {}",
                 savedMatch.getExternalId(), userAccount.getId(), savedMatch.getCreatedByClub().getId());
@@ -100,9 +102,8 @@ public class MatchServiceImpl implements MatchService {
     @Transactional(readOnly = true)
     @Override
     public List<MatchDto> getClubMatches(UUID clubExternalId, String email) {
-        UserAccount userAccount = userAccountService.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-        Club club = getOrElseThrow(clubExternalId);
+        UserAccount userAccount = getUserOrThrow(email);
+        Club club = getClubByExternalId(clubExternalId);
 
         requireActiveMembership(userAccount, club);
 
@@ -111,7 +112,74 @@ public class MatchServiceImpl implements MatchService {
                 .toList();
     }
 
-    private Club getOrElseThrow(UUID request) {
+    @Transactional(readOnly = true)
+    @Override
+    public MatchDto getMatchDetails(UUID matchExternalId, UUID clubExternalId, String email) {
+        UserAccount userAccount = getUserOrThrow(email);
+        Club club = getClubByExternalId(clubExternalId);
+        Match match = getMatchOrThrow(matchExternalId);
+
+        requireActiveMembership(userAccount, club);
+
+        return MatchMapper.mapToDto(match);
+    }
+
+
+
+    @Transactional
+    @Override
+    public void finishMatch(UUID matchExternalId, String email) {
+        UserAccount userAccount = getUserOrThrow(email);
+        Match match = getMatchOrThrow(matchExternalId);
+
+        requireStaffRole(userAccount, match.getCreatedByClub());
+
+        List<SetEntity> sets = match.getSets();
+
+        long homeWon = sets.stream()
+                .filter(this::isFinishedSet)
+                .filter(set -> set.getHomePoints() > set.getAwayPoints())
+                .count();
+
+        long awayWon = sets.stream()
+                .filter(this::isFinishedSet)
+                .filter(set -> set.getAwayPoints() > set.getHomePoints())
+                .count();
+
+        if (homeWon == 3 || awayWon == 3) {
+            match.setStatus(MatchStatus.FINISHED);
+            log.info("Match {} finished by user {}", match.getExternalId(), userAccount.getEmail());
+        } else {
+            throw new SetException("Cannot finish match");
+        }
+
+    }
+
+    private Match findMatchOrThrow(UUID matchExternalId) {
+        return matchRepository.findByExternalId(matchExternalId)
+                .orElseThrow(() -> new MatchNotFoundException("Match not found"));
+    }
+
+
+    private Match getMatchOrThrow(UUID matchExternalId) {
+        return matchRepository.findByExternalId(matchExternalId)
+                .orElseThrow(() -> new MatchNotFoundException("Match nor found"));
+    }
+
+    private UserAccount getUserOrThrow(String email) {
+        return userAccountService.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+
+    private boolean isFinishedSet(SetEntity set) {
+        int requiredPoints = set.getSetNumber() == 5 ? 15 : 25;
+
+        return Math.max(set.getHomePoints(), set.getAwayPoints()) >= requiredPoints
+                && Math.abs(set.getHomePoints() - set.getAwayPoints()) >= 2;
+    }
+
+    private Club getClubByExternalId(UUID request) {
         return clubRepository.findByExternalIdAndClubStatus(request, ClubStatus.ACTIVE)
                 .orElseThrow(() -> new ClubNotFoundException("Club not found"));
     }
@@ -145,6 +213,16 @@ public class MatchServiceImpl implements MatchService {
         if (!clubMembershipRepository.hasActiveMembership(userAccount.getId(), club.getId())) {
             log.warn("User {} cannot view matches for club {}", userAccount.getId(), club.getId());
             throw new ClubMembershipAccessDeniedException("You cannot view matches for selected club");
+        }
+    }
+
+    private void requireClubParticipatesInMatch(Club club, Match match) {
+        boolean participates = match.getTeams().stream()
+                .anyMatch(team -> team.getClub().getId().equals(club.getId()));
+
+        if (!participates) {
+            throw new ClubMembershipAccessDeniedException(
+                    "Club does not participate in this match");
         }
     }
 

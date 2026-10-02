@@ -1,9 +1,11 @@
-package pl.volleyflow.match.model;
+package pl.volleyflow.match.model.Match;
 
 import lombok.Builder;
 import pl.volleyflow.club.model.ClubBasicDto;
+import pl.volleyflow.match.model.Set.SetDto;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Builder
@@ -16,5 +18,6 @@ public record MatchDto(
         Instant scheduledAt,
         Instant startedAt,
         Instant finishedAt,
-        MatchLocation matchLocation) {
+        MatchLocation matchLocation,
+        List<SetDto> sets) {
 }

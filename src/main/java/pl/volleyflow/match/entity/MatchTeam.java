@@ -3,7 +3,7 @@ package pl.volleyflow.match.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import pl.volleyflow.club.model.Club;
-import pl.volleyflow.match.model.MatchSide;
+import pl.volleyflow.match.model.Match.MatchSide;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -26,7 +26,7 @@ public class MatchTeam {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id", nullable = false)
-    private MatchEntity match;
+    private Match match;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id", nullable = false)

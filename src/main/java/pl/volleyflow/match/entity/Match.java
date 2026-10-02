@@ -3,7 +3,7 @@ package pl.volleyflow.match.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import pl.volleyflow.club.model.Club;
-import pl.volleyflow.match.model.MatchStatus;
+import pl.volleyflow.match.model.Match.MatchStatus;
 import pl.volleyflow.user.entity.UserAccount;
 
 import java.time.Instant;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MatchEntity {
+public class Match {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,7 +57,7 @@ public class MatchEntity {
 
     @Builder.Default
     @OneToMany(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MatchSet> sets = new ArrayList<>();
+    private List<SetEntity> sets = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -88,7 +88,7 @@ public class MatchEntity {
         team.setMatch(this);
     }
 
-    public void addSet(MatchSet set) {
+    public void addSet(SetEntity set) {
         sets.add(set);
         set.setMatch(this);
     }

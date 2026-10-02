@@ -1,4 +1,4 @@
-package pl.volleyflow.match.model;
+package pl.volleyflow.match.model.Match;
 
 public enum MatchStatus {
 

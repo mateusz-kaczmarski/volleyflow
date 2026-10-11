@@ -1,5 +1,95 @@
 # Volleyflow
 
+## Backend development (`develop`)
+
+Backend na tym branchu jest wyrównany z `front` (`51e32ba4`): kod aplikacji,
+testy i migracje schematu `V1–V8`. Frontend może znajdować się lokalnie
+w `frontend/`, ale na `develop` cały ten katalog jest ignorowany przez Git.
+Kod frontendu jest utrzymywany na branchu `front` i w repozytorium zespołowym.
+
+### Lokalna baza i fikcyjne dane demo
+
+Docker Compose uruchamia niezależny kontener `volleyflow-develop-db` na porcie
+`5434` z wolumenem `volleyflow-develop_postgres-data`. Nie korzysta z baz
+`volleyflow-db` ani `volleyflow-team-db`. Domyślne dane połączenia:
+`volleyflow` / `admin` / `admin` (baza / użytkownik / hasło).
+
+```bash
+docker compose up -d --wait
+SPRING_CONFIG_LOCATION=classpath:/ ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+```
+
+`SPRING_CONFIG_LOCATION` wybiera konfigurację z projektu, aby lokalne pliki
+wdrożeniowe w `config/` pozostawione przez inne branche nie kierowały
+aplikacji do starej bazy. Backend działa na `http://localhost:8080`.
+W PowerShell ustaw `$env:SPRING_CONFIG_LOCATION='classpath:/'` i uruchom
+`./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=demo`.
+
+Profil `demo` dodaje `src/main/resources/db/demo/R__demo_data.sql` do lokalizacji
+Flyway. Bez tego profilu wykonują się wyłącznie migracje `V1–V8`, w tym
+podstawowe dane demonstracyjne obecne już w historycznej migracji `V1`.
+Istniejące migracje nie zostały zmienione. Nowe współdzielone migracje schematu
+nazywaj od `V10`, ponieważ repozytorium `volleyflow-team` ma już własne `V9`.
+
+Zestaw demo zawiera wyłącznie fikcyjne dane:
+
+- Aurora Volley oraz przeciwników Orion Volley i Polaris Volley;
+- właściciela, trenera i 12 zawodników z pozycjami oraz numerami koszulek;
+- 3 zakończone mecze (3:1, 2:3, 3:0), 12 setów i 144 rekordy statystyk;
+- MVP zakończonych meczów i 2 zaplanowane spotkania;
+- statystyki zgodne z obliczeniami backendu; rezerwowi mają wartości zerowe.
+
+Logowanie do Aurora Volley:
+
+```text
+email: aurora.owner@example.com
+password: demo1234
+```
+
+UUID i daty fixture są stałe. Osoby uruchamiające świeżą bazę z tego samego
+commita otrzymają ten sam zestaw danych. Różnice w datach rekordów historycznego
+`V1` wynikają z użycia `now()` w tej migracji.
+
+Flyway wykonuje migrację `R__` po raz pierwszy i ponownie po zmianie jej sumy
+kontrolnej. Fixture rozpoznaje istniejącego właściciela Aurora po UUID i nie
+nadpisuje danych ani nie odtwarza usuniętych rekordów podczas kolejnego wykonania.
+Zmiana fixture nie aktualizuje wcześniej załadowanych danych.
+
+Aby świadomie odtworzyć całą **lokalną bazę develop** od zera (usuwa wszystkie
+dane tylko w tym projekcie Compose):
+
+```bash
+docker compose down -v
+docker compose up -d --wait
+SPRING_CONFIG_LOCATION=classpath:/ ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+```
+
+### Lokalny frontend
+
+W obecnym katalogu roboczym frontend z `front` jest już dostępny. W świeżym
+klonie można pobrać go bez dodawania do indeksu Git:
+
+```bash
+git fetch origin front
+git archive origin/front frontend | tar -x
+cd frontend
+npm ci
+npm start
+```
+
+Frontend działa na `http://localhost:4200` i korzysta z backendu na porcie
+`8080`. Wymaga Node.js zgodnego z Angular 20 (np. Node 22.12+).
+Na `develop` nie używaj `git add -f frontend`.
+
+### Weryfikacja
+
+```bash
+./mvnw clean verify
+```
+
+Testy repozytoriów korzystają z H2; profil `demo` służy do uruchamiania aplikacji
+z PostgreSQL, nie do zastępowania konfiguracji testów.
+
 Backend application for managing amateur volleyball clubs, players and club memberships. The project is built as a Spring Boot REST API and is currently an MVP/work-in-progress portfolio project.
 
 ## Features
@@ -103,13 +193,13 @@ The included `docker-compose.yml` starts PostgreSQL with local fallback values:
 database: volleyflow
 user: admin
 password: admin
-port: 5432
+port: 5434
 ```
 
 The application uses environment variable placeholders with local demo fallbacks:
 
 ```text
-DB_URL=jdbc:postgresql://localhost:5432/volleyflow
+DB_URL=jdbc:postgresql://localhost:5434/volleyflow
 DB_USERNAME=admin
 DB_PASSWORD=admin
 JWT_SECRET=<base64-encoded-demo-secret>

@@ -1,4 +1,4 @@
-package pl.volleyflow.match.model.Set;
+package pl.volleyflow.match.model.set;
 
 import jakarta.validation.constraints.Size;
 

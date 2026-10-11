@@ -1,4 +1,4 @@
-package pl.volleyflow.match.model.Match;
+package pl.volleyflow.match.model.match;
 
 public enum MatchSide {
 

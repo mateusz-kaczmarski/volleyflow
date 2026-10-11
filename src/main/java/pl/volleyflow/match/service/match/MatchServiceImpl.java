@@ -2,7 +2,6 @@ package pl.volleyflow.match.service.match;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.club.model.Club;
@@ -14,11 +13,12 @@ import pl.volleyflow.clubmembership.model.ClubMembershipRole;
 import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
 import pl.volleyflow.match.entity.Match;
 import pl.volleyflow.match.entity.SetEntity;
-import pl.volleyflow.match.model.Match.*;
+import pl.volleyflow.match.model.match.*;
+import pl.volleyflow.match.model.set.SetCreateRequest;
+import pl.volleyflow.match.model.set.SetMapper;
 import pl.volleyflow.match.model.exceptions.MatchNotFoundException;
 import pl.volleyflow.match.model.exceptions.MatchTeamsMustBeDifferentException;
 import pl.volleyflow.match.model.exceptions.SetException;
-import pl.volleyflow.match.model.exceptions.SetNotFoundException;
 import pl.volleyflow.match.repository.MatchRepository;
 import pl.volleyflow.match.repository.SetRepository;
 import pl.volleyflow.match.repository.SetStatisticsRepository;
@@ -62,6 +62,9 @@ public class MatchServiceImpl implements MatchService {
         requireStaffRole(userAccount, createdByClub);
 
         Match match = MatchMapper.mapToEntity(request, homeClub, awayClub, userAccount, createdByClub);
+        for (int setNumber = 1; setNumber <= 3; setNumber++) {
+            match.addSet(SetMapper.mapToEntity(new SetCreateRequest(0, 0), match, setNumber));
+        }
         Match savedMatch = matchRepository.save(match);
 
         log.info("Successfully created match {} by user {} for club {}",

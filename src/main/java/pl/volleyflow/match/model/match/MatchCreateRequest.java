@@ -1,4 +1,4 @@
-package pl.volleyflow.match.model.Match;
+package pl.volleyflow.match.model.match;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.FutureOrPresent;

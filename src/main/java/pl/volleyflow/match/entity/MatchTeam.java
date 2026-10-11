@@ -3,7 +3,7 @@ package pl.volleyflow.match.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import pl.volleyflow.club.model.Club;
-import pl.volleyflow.match.model.Match.MatchSide;
+import pl.volleyflow.match.model.match.MatchSide;
 
 import java.time.Instant;
 import java.util.UUID;

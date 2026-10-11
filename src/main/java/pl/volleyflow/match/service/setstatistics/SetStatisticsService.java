@@ -1,7 +1,8 @@
 package pl.volleyflow.match.service.setstatistics;
 
-import pl.volleyflow.match.model.Set.SetStatisticsDto;
-import pl.volleyflow.match.model.Set.SetStatisticsUpdateRequest;
+import pl.volleyflow.match.model.set.SetStatisticsDto;
+import pl.volleyflow.match.model.set.SetStatisticsUpdateRequest;
+import pl.volleyflow.match.model.setstatistics.PlayerCareerStatisticsDto;
 
 import java.util.UUID;
 
@@ -17,5 +18,9 @@ public interface SetStatisticsService {
                                       UUID clubExternalId,
                                       UUID setExternalId,
                                       String email);
+
+    PlayerCareerStatisticsDto getAllStatisticsForPlayer(UUID clubExternalId,
+                                                        UUID playerExternalId,
+                                                        String email);
 
 }

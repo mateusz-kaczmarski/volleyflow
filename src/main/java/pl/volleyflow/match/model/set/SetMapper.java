@@ -1,4 +1,4 @@
-package pl.volleyflow.match.model.Set;
+package pl.volleyflow.match.model.set;
 
 import pl.volleyflow.match.entity.Match;
 import pl.volleyflow.match.entity.SetEntity;

@@ -1,4 +1,4 @@
-package pl.volleyflow.match.model.Match;
+package pl.volleyflow.match.model.match;
 
 import pl.volleyflow.club.model.Club;
 import pl.volleyflow.club.model.ClubMapper;
@@ -6,7 +6,7 @@ import pl.volleyflow.match.entity.MatchAddress;
 import pl.volleyflow.match.entity.Match;
 import pl.volleyflow.match.entity.SetEntity;
 import pl.volleyflow.match.entity.MatchTeam;
-import pl.volleyflow.match.model.Set.SetMapper;
+import pl.volleyflow.match.model.set.SetMapper;
 import pl.volleyflow.user.entity.UserAccount;
 
 import java.util.Comparator;

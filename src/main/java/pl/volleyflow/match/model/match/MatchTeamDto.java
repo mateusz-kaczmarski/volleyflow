@@ -1,4 +1,4 @@
-package pl.volleyflow.match.model.Match;
+package pl.volleyflow.match.model.match;
 
 import lombok.Builder;
 import pl.volleyflow.club.model.ClubBasicDto;

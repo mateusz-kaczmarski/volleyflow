@@ -1,9 +1,8 @@
 package pl.volleyflow.match.service.match;
 
-import pl.volleyflow.match.model.Match.MatchCreateRequest;
-import pl.volleyflow.match.model.Match.MatchDto;
-import pl.volleyflow.match.model.Match.MatchUpdateRequest;
-import pl.volleyflow.match.model.Set.*;
+import pl.volleyflow.match.model.match.MatchCreateRequest;
+import pl.volleyflow.match.model.match.MatchDto;
+import pl.volleyflow.match.model.match.MatchUpdateRequest;
 
 import java.util.List;
 import java.util.UUID;

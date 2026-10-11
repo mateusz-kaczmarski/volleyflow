@@ -55,11 +55,26 @@ public class SetStatisticEntity {
     @Column(name = "serve_aces", nullable = false)
     private int serveAces;
 
+    @Column(name = "opponent_received_serve_count", nullable = false)
+    private int opponentReceivedServeCount;
+
     @Column(name = "reception_total", nullable = false)
     private int receptionTotal;
 
     @Column(name = "reception_error", nullable = false)
     private int receptionError;
+
+    @Column(name = "reception_negative_count", nullable = false)
+    private int receptionNegativeCount;
+
+    @Column(name = "reception_neutral_count", nullable = false)
+    private int receptionNeutralCount;
+
+    @Column(name = "reception_positive_count", nullable = false)
+    private int receptionPositiveCount;
+
+    @Column(name = "reception_perfect_count", nullable = false)
+    private int receptionPerfectCount;
 
     @Column(name = "reception_positive_percent", nullable = false)
     private int receptionPositivePercent;
@@ -78,6 +93,9 @@ public class SetStatisticEntity {
 
     @Column(name = "attack_points", nullable = false)
     private int attackPoints;
+
+    @Column(name = "opponent_defended_attack_count", nullable = false)
+    private int opponentDefendedAttackCount;
 
     @Column(name = "block_points", nullable = false)
     private int blockPoints;

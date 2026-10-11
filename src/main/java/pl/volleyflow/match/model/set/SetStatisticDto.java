@@ -1,4 +1,4 @@
-package pl.volleyflow.match.model.Set;
+package pl.volleyflow.match.model.set;
 
 import lombok.Builder;
 
@@ -12,14 +12,20 @@ public record SetStatisticDto(
         int serveTotal,
         int serveError,
         int serveAces,
+        int opponentReceivedServeCount,
         int receptionTotal,
         int receptionError,
+        int receptionNegativeCount,
+        int receptionNeutralCount,
+        int receptionPositiveCount,
+        int receptionPerfectCount,
         int receptionPositivePercent,
         int receptionPerfectPercent,
         int attackTotal,
         int attackError,
         int attackBlocked,
         int attackPoints,
+        int opponentDefendedAttackCount,
         int blockPoints,
         int blockTouches,
         int defense,

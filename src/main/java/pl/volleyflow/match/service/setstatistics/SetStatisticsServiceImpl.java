@@ -15,9 +15,12 @@ import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
 import pl.volleyflow.match.entity.Match;
 import pl.volleyflow.match.entity.SetEntity;
 import pl.volleyflow.match.entity.SetStatisticEntity;
-import pl.volleyflow.match.model.Set.*;
+import pl.volleyflow.match.model.set.*;
 import pl.volleyflow.match.model.exceptions.MatchNotFoundException;
 import pl.volleyflow.match.model.exceptions.SetNotFoundException;
+import pl.volleyflow.match.model.match.MatchSide;
+import pl.volleyflow.match.model.match.MatchStatus;
+import pl.volleyflow.match.model.setstatistics.*;
 import pl.volleyflow.match.repository.MatchRepository;
 import pl.volleyflow.match.repository.SetRepository;
 import pl.volleyflow.match.repository.SetStatisticsRepository;
@@ -94,11 +97,12 @@ public class SetStatisticsServiceImpl implements SetStatisticsService {
                 throw new IllegalArgumentException("Player is not an active member of this club");
             }
 
+            SetStatisticInput calculatedInput = calculateStatistic(input);
             SetStatisticEntity statistic = existingStatistics.remove(input.playerExternalId());
             if (statistic == null) {
-                statistic = SetStatisticsMapper.mapToEntity(input, set, club, player);
+                statistic = SetStatisticsMapper.mapToEntity(calculatedInput, set, club, player);
             } else {
-                SetStatisticsMapper.updateEntity(statistic, input);
+                SetStatisticsMapper.updateEntity(statistic, calculatedInput);
             }
             statisticsToSave.add(statistic);
         }
@@ -135,6 +139,170 @@ public class SetStatisticsServiceImpl implements SetStatisticsService {
         return new SetStatisticsDto(result);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public PlayerCareerStatisticsDto getAllStatisticsForPlayer(UUID clubExternalId,
+                                                               UUID playerExternalId,
+                                                               String email) {
+        UserAccount userAccount = getUserOrThrow(email);
+        Club club = getClubByExternalId(clubExternalId);
+        requireActiveMembership(userAccount, club);
+
+        List<SetStatisticEntity> statistics = setStatisticsRepository.findPlayerCareerStatistics(
+                clubExternalId, playerExternalId, MatchStatus.FINISHED);
+        Map<Match, List<SetStatisticEntity>> statisticsByMatch = new LinkedHashMap<>();
+        for (SetStatisticEntity statistic : statistics) {
+            statisticsByMatch.computeIfAbsent(statistic.getSet().getMatch(), ignored -> new ArrayList<>())
+                    .add(statistic);
+        }
+
+        List<PlayerMatchStatisticsDto> matches = statisticsByMatch.entrySet().stream()
+                .map(entry -> mapMatchStatistics(entry.getKey(), club, entry.getValue()))
+                .toList();
+
+        return new PlayerCareerStatisticsDto(
+                statisticsByMatch.size(),
+                statistics.size(),
+                sum(statistics, SetStatisticEntity::getPoints),
+                attackStatistics(statistics),
+                receptionStatistics(statistics),
+                serveStatistics(statistics),
+                blockStatistics(statistics),
+                sum(statistics, SetStatisticEntity::getDefense),
+                sum(statistics, SetStatisticEntity::getAssists),
+                matches);
+    }
+
+    private PlayerMatchStatisticsDto mapMatchStatistics(Match match,
+                                                         Club club,
+                                                         List<SetStatisticEntity> statistics) {
+        String opponentName = match.getTeams().stream()
+                .filter(team -> !team.getClub().getId().equals(club.getId()))
+                .map(team -> team.getClub().getName())
+                .findFirst()
+                .orElse("Unknown opponent");
+
+        int homeSets = (int) match.getSets().stream()
+                .filter(set -> set.getHomePoints() > set.getAwayPoints())
+                .count();
+        int awaySets = (int) match.getSets().stream()
+                .filter(set -> set.getAwayPoints() > set.getHomePoints())
+                .count();
+        boolean clubIsHome = match.getTeams().stream()
+                .anyMatch(team -> team.getClub().getId().equals(club.getId()) && team.getSide() == MatchSide.HOME);
+        AttackStatisticsDto attack = attackStatistics(statistics);
+        ReceptionStatisticsDto reception = receptionStatistics(statistics);
+        ServeStatisticsDto serve = serveStatistics(statistics);
+
+        return new PlayerMatchStatisticsDto(
+                match.getExternalId(),
+                match.getScheduledAt(),
+                opponentName,
+                clubIsHome ? homeSets + " : " + awaySets : awaySets + " : " + homeSets,
+                statistics.size(),
+                sum(statistics, SetStatisticEntity::getPoints),
+                attack.successPercent(),
+                attack.efficiencyPercent(),
+                reception.positivePercent(),
+                reception.perfectPercent(),
+                serve.aces(),
+                serve.efficiencyPercent(),
+                sum(statistics, SetStatisticEntity::getBlockPoints),
+                sum(statistics, SetStatisticEntity::getBlockTouches),
+                sum(statistics, SetStatisticEntity::getDefense));
+    }
+
+    private AttackStatisticsDto attackStatistics(List<SetStatisticEntity> statistics) {
+        int total = sum(statistics, SetStatisticEntity::getAttackTotal);
+        int points = sum(statistics, SetStatisticEntity::getAttackPoints);
+        int errors = sum(statistics, SetStatisticEntity::getAttackError);
+        int blocked = sum(statistics, SetStatisticEntity::getAttackBlocked);
+        return new AttackStatisticsDto(
+                total,
+                points,
+                percent(points, total),
+                percent(points - errors - blocked, total));
+    }
+
+    private ReceptionStatisticsDto receptionStatistics(List<SetStatisticEntity> statistics) {
+        int total = sum(statistics, SetStatisticEntity::getReceptionTotal);
+        return new ReceptionStatisticsDto(
+                weightedPercent(statistics, SetStatisticEntity::getReceptionPositivePercent,
+                        SetStatisticEntity::getReceptionTotal, total),
+                weightedPercent(statistics, SetStatisticEntity::getReceptionPerfectPercent,
+                        SetStatisticEntity::getReceptionTotal, total));
+    }
+
+    private ServeStatisticsDto serveStatistics(List<SetStatisticEntity> statistics) {
+        int total = sum(statistics, SetStatisticEntity::getServeTotal);
+        int aces = sum(statistics, SetStatisticEntity::getServeAces);
+        int errors = sum(statistics, SetStatisticEntity::getServeError);
+        return new ServeStatisticsDto(aces, percent(aces - errors, total));
+    }
+
+    private BlockStatisticsDto blockStatistics(List<SetStatisticEntity> statistics) {
+        return new BlockStatisticsDto(
+                sum(statistics, SetStatisticEntity::getBlockPoints),
+                sum(statistics, SetStatisticEntity::getBlockTouches));
+    }
+
+    private SetStatisticInput calculateStatistic(SetStatisticInput input) {
+        int serveTotal = input.serveError() + input.serveAces() + input.opponentReceivedServeCount();
+        int receptionTotal = input.receptionError() + input.receptionNegativeCount()
+                + input.receptionNeutralCount() + input.receptionPositiveCount() + input.receptionPerfectCount();
+        int attackTotal = input.attackError() + input.attackBlocked()
+                + input.attackPoints() + input.opponentDefendedAttackCount();
+        int points = input.serveAces() + input.attackPoints() + input.blockPoints();
+
+        return new SetStatisticInput(
+                input.playerExternalId(),
+                points,
+                points - input.serveError() - input.receptionError() - input.attackError(),
+                serveTotal,
+                input.serveError(),
+                input.serveAces(),
+                input.opponentReceivedServeCount(),
+                receptionTotal,
+                input.receptionError(),
+                input.receptionNegativeCount(),
+                input.receptionNeutralCount(),
+                input.receptionPositiveCount(),
+                input.receptionPerfectCount(),
+                percent(input.receptionPositiveCount() + input.receptionPerfectCount(), receptionTotal),
+                percent(input.receptionPerfectCount(), receptionTotal),
+                attackTotal,
+                input.attackError(),
+                input.attackBlocked(),
+                input.attackPoints(),
+                input.opponentDefendedAttackCount(),
+                input.blockPoints(),
+                input.blockTouches(),
+                input.defense(),
+                input.assists());
+    }
+
+    private int weightedPercent(List<SetStatisticEntity> statistics,
+                                java.util.function.ToIntFunction<SetStatisticEntity> percentExtractor,
+                                java.util.function.ToIntFunction<SetStatisticEntity> totalExtractor,
+                                int total) {
+        if (total == 0) {
+            return 0;
+        }
+        long weightedTotal = statistics.stream()
+                .mapToLong(statistic -> (long) percentExtractor.applyAsInt(statistic)
+                        * totalExtractor.applyAsInt(statistic))
+                .sum();
+        return (int) Math.round((double) weightedTotal / total);
+    }
+
+    private int percent(int numerator, int denominator) {
+        return denominator == 0 ? 0 : (int) Math.round((double) numerator * 100 / denominator);
+    }
+
+    private int sum(List<SetStatisticEntity> statistics,
+                    java.util.function.ToIntFunction<SetStatisticEntity> extractor) {
+        return statistics.stream().mapToInt(extractor).sum();
+    }
     private SetEntity findSetOrThrow(UUID setExternalId, Match match) {
         return setRepository.findByExternalIdAndMatch(setExternalId, match)
                 .orElseThrow(() -> new SetNotFoundException("Set not found"));

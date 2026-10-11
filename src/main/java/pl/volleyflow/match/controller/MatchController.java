@@ -5,11 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.volleyflow.match.model.Match.MatchCreateRequest;
-import pl.volleyflow.match.model.Match.MatchDto;
-import pl.volleyflow.match.model.Match.MatchMvpUpdateRequest;
-import pl.volleyflow.match.model.Match.MatchUpdateRequest;
-import pl.volleyflow.match.model.Set.*;
+import pl.volleyflow.match.model.match.MatchCreateRequest;
+import pl.volleyflow.match.model.match.MatchDto;
+import pl.volleyflow.match.model.match.MatchMvpUpdateRequest;
+import pl.volleyflow.match.model.match.MatchUpdateRequest;
+import pl.volleyflow.match.model.set.*;
+import pl.volleyflow.match.model.setstatistics.PlayerCareerStatisticsDto;
 import pl.volleyflow.match.service.match.MatchService;
 import pl.volleyflow.match.service.set.SetService;
 import pl.volleyflow.match.service.setstatistics.SetStatisticsService;
@@ -54,7 +55,7 @@ public class MatchController {
         return ResponseEntity.ok().body(matchService.getMatchDetails(
                 matchExternalId,
                 clubExternalId,
-                 principal.getName()));
+                principal.getName()));
     }
 
     @PutMapping("/{clubExternalId}/{matchExternalId}/mvp")
@@ -90,10 +91,10 @@ public class MatchController {
 
     @PutMapping("/{clubExternalId}/{matchExternalId}/set/{setExternalId}/video")
     ResponseEntity<SetDto> updateSetVideo(@PathVariable UUID clubExternalId,
-                                           @PathVariable UUID matchExternalId,
-                                           @PathVariable UUID setExternalId,
-                                           @Valid @RequestBody SetVideoUpdateRequest request,
-                                           Principal principal) {
+                                          @PathVariable UUID matchExternalId,
+                                          @PathVariable UUID setExternalId,
+                                          @Valid @RequestBody SetVideoUpdateRequest request,
+                                          Principal principal) {
         return ResponseEntity.ok(setService.updateSetVideo(
                 matchExternalId, clubExternalId, setExternalId, request.videoUrl(), principal.getName()));
     }
@@ -136,6 +137,16 @@ public class MatchController {
                                    Principal principal) {
         setService.deleteSet(matchExternalId, clubExternalId, setExternalId, principal.getName());
         return ResponseEntity.status(204).build();
+    }
+
+    @GetMapping("/clubs/{clubExternalId}/players/{playerExternalId}/statistics")
+    ResponseEntity<PlayerCareerStatisticsDto> getAllStatisticsForPlayer(@PathVariable UUID clubExternalId,
+                                                                        @PathVariable UUID playerExternalId,
+                                                                        Principal principal) {
+        return ResponseEntity.ok().body(setStatisticsService.getAllStatisticsForPlayer(
+                clubExternalId,
+                playerExternalId,
+                principal.getName()));
     }
 
 }

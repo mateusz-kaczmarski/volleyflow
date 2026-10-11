@@ -1,8 +1,8 @@
-package pl.volleyflow.match.model.Match;
+package pl.volleyflow.match.model.match;
 
 import lombok.Builder;
 import pl.volleyflow.club.model.ClubBasicDto;
-import pl.volleyflow.match.model.Set.SetDto;
+import pl.volleyflow.match.model.set.SetDto;
 
 import java.time.Instant;
 import java.util.List;

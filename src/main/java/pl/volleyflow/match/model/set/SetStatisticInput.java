@@ -1,4 +1,4 @@
-package pl.volleyflow.match.model.Set;
+package pl.volleyflow.match.model.set;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -13,14 +13,20 @@ public record SetStatisticInput(
         @NotNull @Min(0) Integer serveTotal,
         @NotNull @Min(0) Integer serveError,
         @NotNull @Min(0) Integer serveAces,
+        @NotNull @Min(0) Integer opponentReceivedServeCount,
         @NotNull @Min(0) Integer receptionTotal,
         @NotNull @Min(0) Integer receptionError,
+        @NotNull @Min(0) Integer receptionNegativeCount,
+        @NotNull @Min(0) Integer receptionNeutralCount,
+        @NotNull @Min(0) Integer receptionPositiveCount,
+        @NotNull @Min(0) Integer receptionPerfectCount,
         @NotNull @Min(0) @Max(100) Integer receptionPositivePercent,
         @NotNull @Min(0) @Max(100) Integer receptionPerfectPercent,
         @NotNull @Min(0) Integer attackTotal,
         @NotNull @Min(0) Integer attackError,
         @NotNull @Min(0) Integer attackBlocked,
         @NotNull @Min(0) Integer attackPoints,
+        @NotNull @Min(0) Integer opponentDefendedAttackCount,
         @NotNull @Min(0) Integer blockPoints,
         @NotNull @Min(0) Integer blockTouches,
         @NotNull @Min(0) Integer defense,

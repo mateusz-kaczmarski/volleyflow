@@ -1,4 +1,4 @@
-package pl.volleyflow.match.model.Set;
+package pl.volleyflow.match.model.set;
 
 import pl.volleyflow.club.model.Club;
 import pl.volleyflow.match.entity.SetEntity;
@@ -32,14 +32,20 @@ public final class SetStatisticsMapper {
                 player.serveTotal(),
                 player.serveError(),
                 player.serveAces(),
+                player.opponentReceivedServeCount(),
                 player.receptionTotal(),
                 player.receptionError(),
+                player.receptionNegativeCount(),
+                player.receptionNeutralCount(),
+                player.receptionPositiveCount(),
+                player.receptionPerfectCount(),
                 player.receptionPositivePercent(),
                 player.receptionPerfectPercent(),
                 player.attackTotal(),
                 player.attackError(),
                 player.attackBlocked(),
                 player.attackPoints(),
+                player.opponentDefendedAttackCount(),
                 player.blockPoints(),
                 player.blockTouches(),
                 player.defense(),
@@ -54,14 +60,20 @@ public final class SetStatisticsMapper {
                 statistic.getServeTotal(),
                 statistic.getServeError(),
                 statistic.getServeAces(),
+                statistic.getOpponentReceivedServeCount(),
                 statistic.getReceptionTotal(),
                 statistic.getReceptionError(),
+                statistic.getReceptionNegativeCount(),
+                statistic.getReceptionNeutralCount(),
+                statistic.getReceptionPositiveCount(),
+                statistic.getReceptionPerfectCount(),
                 statistic.getReceptionPositivePercent(),
                 statistic.getReceptionPerfectPercent(),
                 statistic.getAttackTotal(),
                 statistic.getAttackError(),
                 statistic.getAttackBlocked(),
                 statistic.getAttackPoints(),
+                statistic.getOpponentDefendedAttackCount(),
                 statistic.getBlockPoints(),
                 statistic.getBlockTouches(),
                 statistic.getDefense(),
@@ -81,14 +93,20 @@ public final class SetStatisticsMapper {
                 .serveTotal(input.serveTotal())
                 .serveError(input.serveError())
                 .serveAces(input.serveAces())
+                .opponentReceivedServeCount(input.opponentReceivedServeCount())
                 .receptionTotal(input.receptionTotal())
                 .receptionError(input.receptionError())
+                .receptionNegativeCount(input.receptionNegativeCount())
+                .receptionNeutralCount(input.receptionNeutralCount())
+                .receptionPositiveCount(input.receptionPositiveCount())
+                .receptionPerfectCount(input.receptionPerfectCount())
                 .receptionPositivePercent(input.receptionPositivePercent())
                 .receptionPerfectPercent(input.receptionPerfectPercent())
                 .attackTotal(input.attackTotal())
                 .attackError(input.attackError())
                 .attackBlocked(input.attackBlocked())
                 .attackPoints(input.attackPoints())
+                .opponentDefendedAttackCount(input.opponentDefendedAttackCount())
                 .blockPoints(input.blockPoints())
                 .blockTouches(input.blockTouches())
                 .defense(input.defense())
@@ -102,14 +120,20 @@ public final class SetStatisticsMapper {
         statistic.setServeTotal(input.serveTotal());
         statistic.setServeError(input.serveError());
         statistic.setServeAces(input.serveAces());
+        statistic.setOpponentReceivedServeCount(input.opponentReceivedServeCount());
         statistic.setReceptionTotal(input.receptionTotal());
         statistic.setReceptionError(input.receptionError());
+        statistic.setReceptionNegativeCount(input.receptionNegativeCount());
+        statistic.setReceptionNeutralCount(input.receptionNeutralCount());
+        statistic.setReceptionPositiveCount(input.receptionPositiveCount());
+        statistic.setReceptionPerfectCount(input.receptionPerfectCount());
         statistic.setReceptionPositivePercent(input.receptionPositivePercent());
         statistic.setReceptionPerfectPercent(input.receptionPerfectPercent());
         statistic.setAttackTotal(input.attackTotal());
         statistic.setAttackError(input.attackError());
         statistic.setAttackBlocked(input.attackBlocked());
         statistic.setAttackPoints(input.attackPoints());
+        statistic.setOpponentDefendedAttackCount(input.opponentDefendedAttackCount());
         statistic.setBlockPoints(input.blockPoints());
         statistic.setBlockTouches(input.blockTouches());
         statistic.setDefense(input.defense());

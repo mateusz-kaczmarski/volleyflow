@@ -1,9 +1,9 @@
-package pl.volleyflow.match.model.Set;
+package pl.volleyflow.match.model.set;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
-public record SetCreateRequest(
+public record SetUpdateRequest(
         @NotNull(message = "home points cannot be null")
         @Min(value = 0, message = "home points cannot be negative")
         Integer homePoints,

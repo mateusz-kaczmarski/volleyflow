@@ -134,12 +134,12 @@ BEGIN
 
         INSERT INTO volleyball_matches (external_id, status, scheduled_at, started_at, finished_at,
             location_city, location_zip_code, location_street, location_building_number,
-            created_by_user_id, created_by_club_id, created_at, mvp_player_external_id)
+            created_by_user_id, created_by_club_id, season_number, created_at, mvp_player_external_id)
         VALUES (md5('volleyflow-demo:match:' || m)::uuid,
             CASE WHEN m <= 3 THEN 'FINISHED' ELSE 'SCHEDULED' END,
             match_date, CASE WHEN m <= 3 THEN match_date END,
             CASE WHEN m <= 3 THEN match_date + interval '2 hours' END,
-            'Miasto Demo', '00-001', 'Sportowa', '1', owner_id, aurora_id, fixture_date,
+            'Miasto Demo', '00-001', 'Sportowa', '1', owner_id, aurora_id, 2026, fixture_date,
             CASE WHEN m <= 3 THEN md5('volleyflow-demo:player:' ||
                 CASE WHEN m = 2 THEN 5 ELSE 7 END)::uuid END)
         RETURNING id INTO match_id;

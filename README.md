@@ -1,275 +1,217 @@
 # Volleyflow
 
-## Backend development (`develop`)
+Volleyflow to REST API do zarządzania amatorskim klubem siatkarskim. Aplikacja
+obsługuje konta użytkowników, profile zawodników, członkostwa w klubach, mecze,
+sety oraz statystyki meczowe. Zasoby są identyfikowane w API przez UUID.
 
-Backend na tym branchu jest wyrównany z `front` (`51e32ba4`): kod aplikacji,
-testy i migracje schematu `V1–V8`. Frontend może znajdować się lokalnie
-w `frontend/`, ale na `develop` cały ten katalog jest ignorowany przez Git.
-Kod frontendu jest utrzymywany na branchu `front` i w repozytorium zespołowym.
+## Funkcje
 
-### Lokalna baza i fikcyjne dane demo
+- Rejestracja i logowanie użytkownika z uwierzytelnianiem JWT.
+- Zarządzanie kontem i profilem użytkownika.
+- Tworzenie klubów oraz zarządzanie ich członkami.
+- Role członków klubu: `OWNER`, `TRAINER`, `PLAYER`, `STATISTIC`.
+- Tworzenie i aktualizowanie meczów, przypisywanie klubów i sezonów.
+- Rejestrowanie wyników setów, nagrań wideo, MVP i statystyk zawodników.
+- Pobieranie statystyk meczu, setu i kariery zawodnika.
+- Walidacja żądań i ujednolicone odpowiedzi błędów.
 
-Docker Compose uruchamia niezależny kontener `volleyflow-develop-db` na porcie
-`5434` z wolumenem `volleyflow-develop_postgres-data`. Nie korzysta z baz
-`volleyflow-db` ani `volleyflow-team-db`. Domyślne dane połączenia:
-`volleyflow` / `admin` / `admin` (baza / użytkownik / hasło).
+## Technologie
+
+- Java 17, Spring Boot 4
+- Spring Web MVC, Spring Data JPA, Spring Security
+- PostgreSQL i Flyway
+- JWT (`jjwt`)
+- Maven, Docker Compose
+- Springdoc OpenAPI
+
+## Uruchomienie lokalne
+
+Wymagane: Java 17, Docker z Docker Compose.
+
+Uruchom lokalne usługi infrastruktury:
 
 ```bash
 docker compose up -d --wait
+```
+
+Uruchom aplikację z fikcyjnymi danymi demonstracyjnymi:
+
+```bash
 SPRING_CONFIG_LOCATION=classpath:/ ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
 ```
 
-`SPRING_CONFIG_LOCATION` wybiera konfigurację z projektu, aby lokalne pliki
-wdrożeniowe w `config/` pozostawione przez inne branche nie kierowały
-aplikacji do starej bazy. Backend działa na `http://localhost:8080`.
-W PowerShell ustaw `$env:SPRING_CONFIG_LOCATION='classpath:/'` i uruchom
-`./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=demo`.
+`SPRING_CONFIG_LOCATION=classpath:/` wymusza użycie konfiguracji z zasobów
+aplikacji. Na Windows PowerShell:
 
-Profil `demo` dodaje `src/main/resources/db/demo/R__demo_data.sql` do lokalizacji
-Flyway. Bez tego profilu wykonują się wyłącznie migracje `V1–V8`, w tym
-podstawowe dane demonstracyjne obecne już w historycznej migracji `V1`.
-Istniejące migracje nie zostały zmienione. Nowe współdzielone migracje schematu
-nazywaj od `V10`, ponieważ repozytorium `volleyflow-team` ma już własne `V9`.
+```powershell
+$env:SPRING_CONFIG_LOCATION='classpath:/'
+./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=demo
+```
 
-Zestaw demo zawiera wyłącznie fikcyjne dane:
+Aplikacja jest dostępna pod adresem `http://localhost:8080`.
 
-- Aurora Volley oraz przeciwników Orion Volley i Polaris Volley;
-- właściciela, trenera i 12 zawodników z pozycjami oraz numerami koszulek;
-- 3 zakończone mecze (3:1, 2:3, 3:0), 12 setów i 144 rekordy statystyk;
-- MVP zakończonych meczów i 2 zaplanowane spotkania;
-- statystyki zgodne z obliczeniami backendu; rezerwowi mają wartości zerowe.
+### Usługi lokalne
 
-Logowanie do Aurora Volley:
+Docker Compose uruchamia PostgreSQL, Redis, Kafkę w trybie KRaft oraz Mailpit,
+który przechwytuje wiadomości SMTP i udostępnia je w przeglądarce.
+
+| Usługa | Adres hosta | Przeznaczenie |
+|---|---|---|
+| PostgreSQL | `localhost:5534` | Baza `volleyflow_demo` |
+| Redis | `localhost:6379` | Magazyn danych tymczasowych |
+| Kafka | `localhost:9092` | Broker wiadomości; KRaft nie wymaga ZooKeepera |
+| Mailpit SMTP | `localhost:1025` | Lokalny serwer do przechwytywania e-maili |
+| Mailpit UI | <http://localhost:8025> | Podgląd przechwyconych wiadomości |
+
+Domyślne ustawienia PostgreSQL:
+
+| Ustawienie | Wartość |
+|---|---|
+| Host | `localhost` |
+| Port hosta | `5534` |
+| Baza | `volleyflow_demo` |
+| Użytkownik | `admin` |
+| Hasło | `admin` |
+
+Porty usług można nadpisać zmiennymi `DB_PORT`, `REDIS_PORT`, `KAFKA_PORT`,
+`SMTP_PORT` i `MAILPIT_UI_PORT`. Dane PostgreSQL można zmienić przez `POSTGRES_DB`,
+`POSTGRES_USER` i `POSTGRES_PASSWORD`; aplikacja przyjmuje `DB_URL`,
+`DB_USERNAME` i `DB_PASSWORD`. Usługi są publikowane wyłącznie na interfejsie
+loopback komputera.
+
+### Dane demonstracyjne
+
+Aktywuj profil Spring `demo`, aby Flyway załadował fixture z fikcyjnymi danymi:
+
+- Aurora Volley oraz kluby Orion Volley i Polaris Volley;
+- właściciel klubu, trener i 12 przykładowych zawodników;
+- 3 zakończone mecze, 12 setów i statystyki zawodników;
+- wybrane MVP oraz 2 zaplanowane mecze.
+
+Konto demonstracyjne:
 
 ```text
 email: aurora.owner@example.com
-password: demo1234
+hasło: demo1234
 ```
 
-UUID i daty fixture są stałe. Osoby uruchamiające świeżą bazę z tego samego
-commita otrzymają ten sam zestaw danych. Różnice w datach rekordów historycznego
-`V1` wynikają z użycia `now()` w tej migracji.
+Fixture jest idempotentny w tym sensie, że ponowne uruchomienie nie nadpisuje
+istniejących ani lokalnie zmodyfikowanych danych Aurora.
 
-Flyway wykonuje migrację `R__` po raz pierwszy i ponownie po zmianie jej sumy
-kontrolnej. Fixture rozpoznaje istniejącego właściciela Aurora po UUID i nie
-nadpisuje danych ani nie odtwarza usuniętych rekordów podczas kolejnego wykonania.
-Zmiana fixture nie aktualizuje wcześniej załadowanych danych.
+## API
 
-Aby świadomie odtworzyć całą **lokalną bazę develop** od zera (usuwa wszystkie
-dane tylko w tym projekcie Compose):
+Dokumentacja OpenAPI i interaktywny Swagger UI są dostępne po uruchomieniu:
 
-```bash
-docker compose down -v
-docker compose up -d --wait
-SPRING_CONFIG_LOCATION=classpath:/ ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
-```
+- Swagger UI: <http://localhost:8080/swagger-ui/index.html>
+- OpenAPI JSON: <http://localhost:8080/v3/api-docs>
 
-### Lokalny frontend
+Wszystkie endpointy poza rejestracją, logowaniem i dokumentacją wymagają tokenu
+JWT. Przekaż go w nagłówku:
 
-W obecnym katalogu roboczym frontend z `front` jest już dostępny. W świeżym
-klonie można pobrać go bez dodawania do indeksu Git:
-
-```bash
-git fetch origin front
-git archive origin/front frontend | tar -x
-cd frontend
-npm ci
-npm start
-```
-
-Frontend działa na `http://localhost:4200` i korzysta z backendu na porcie
-`8080`. Wymaga Node.js zgodnego z Angular 20 (np. Node 22.12+).
-Na `develop` nie używaj `git add -f frontend`.
-
-### Weryfikacja
-
-```bash
-./mvnw clean verify
-```
-
-Testy repozytoriów korzystają z H2; profil `demo` służy do uruchamiania aplikacji
-z PostgreSQL, nie do zastępowania konfiguracji testów.
-
-Backend application for managing amateur volleyball clubs, players and club memberships. The project is built as a Spring Boot REST API and is currently an MVP/work-in-progress portfolio project.
-
-## Features
-
-- User registration and login with JWT authentication.
-- User self-management: account details, account update, password change and soft delete.
-- User profile creation, update, lookup and guarded deletion.
-- Club creation, update, details view and soft delete.
-- Club owner membership created automatically when a club is created.
-- Player membership management inside a club.
-- Role-based club membership rules for `OWNER`, `TRAINER`, `PLAYER` and `STATISTIC`.
-- Request validation with structured API error responses.
-- PostgreSQL schema migrations with Flyway.
-- PostgreSQL local environment with Docker Compose.
-- OpenAPI UI through Springdoc.
-
-## Tech Stack
-
-- Java 17
-- Spring Boot 4
-- Spring Web MVC
-- Spring Data JPA / Hibernate
-- Spring Security
-- JWT with `jjwt`
-- PostgreSQL
-- Flyway
-- Maven
-- Docker Compose
-- Lombok
-
-## Domain Overview
-
-The application is centered around four main areas:
-
-- `UserAccount` - application user used for authentication and account management.
-- `PersonProfile` - personal profile connected to a user or player.
-- `Club` - volleyball club with lifecycle status.
-- `ClubMembership` - relation between a profile and a club with role, shirt number, positions and active dates.
-
-The API exposes external UUID identifiers instead of internal database IDs.
-
-## Project Structure
-
-```text
-src/main/java/pl/volleyflow
-  auth             authentication API and service
-  club             club API, service, repository and DTOs
-  clubmembership   club member management
-  common           shared utilities
-  config           shared configuration and API error handling
-  personprofile    user/player profile management
-  security         JWT and Spring Security configuration
-  user             user account model and service
-```
-
-## Running Locally
-
-Start PostgreSQL:
-
-```bash
-docker compose up -d
-```
-
-Run the application:
-
-```bash
-./mvnw spring-boot:run
-```
-
-On Windows:
-
-```bash
-mvnw.cmd spring-boot:run
-```
-
-Run tests:
-
-```bash
-./mvnw test
-```
-
-On Windows:
-
-```bash
-mvnw.cmd test
-```
-
-The API starts on the default Spring Boot port: `8080`.
-
-OpenAPI UI:
-
-```text
-http://localhost:8080/swagger-ui/index.html
-```
-
-## Local Database
-
-The included `docker-compose.yml` starts PostgreSQL with local fallback values:
-
-```text
-database: volleyflow
-user: admin
-password: admin
-port: 5434
-```
-
-The application uses environment variable placeholders with local demo fallbacks:
-
-```text
-DB_URL=jdbc:postgresql://localhost:5434/volleyflow
-DB_USERNAME=admin
-DB_PASSWORD=admin
-JWT_SECRET=<base64-encoded-demo-secret>
-```
-
-Flyway migrations are stored in:
-
-```text
-src/main/resources/db/migration
-```
-
-Seeded demo account:
-
-```text
-email: demo.owner@example.com
-password: demo
-```
-
-## Main Endpoints
-
-Authentication:
-
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-
-User:
-
-- `GET /api/users/me`
-- `PUT /api/users/me`
-- `PUT /api/users/me/password`
-- `DELETE /api/users/me`
-
-Profile:
-
-- `POST /api/profiles`
-- `GET /api/profiles/me`
-- `GET /api/profiles/{profileExternalId}`
-- `PUT /api/profiles`
-- `DELETE /api/profiles/me`
-
-Club:
-
-- `POST /api/clubs`
-- `GET /api/clubs/my-clubs`
-- `GET /api/clubs/{clubExternalId}`
-- `GET /api/clubs/{clubExternalId}/details`
-- `PUT /api/clubs/{clubExternalId}`
-- `DELETE /api/clubs/{clubExternalId}`
-
-Membership:
-
-- `POST /api/memberships`
-- `GET /api/memberships/{clubExternalId}/players`
-- `GET /api/memberships/{clubExternalId}/{membershipExternalId}`
-- `PUT /api/memberships/{clubExternalId}/{membershipExternalId}`
-- `DELETE /api/memberships/{clubExternalId}/{membershipExternalId}`
-
-## Authentication
-
-Protected endpoints require a bearer token:
-
-```text
+```http
 Authorization: Bearer <jwt-token>
 ```
 
-Tokens are returned by the register and login endpoints.
+### Uwierzytelnianie
 
-## Error Response
+| Metoda | Endpoint | Działanie |
+|---|---|---|
+| `POST` | `/api/auth/register` | Rejestruje konto i tworzy jego profil; zwraca token JWT. |
+| `POST` | `/api/auth/login` | Uwierzytelnia użytkownika i zwraca token JWT. |
 
-The API returns a simple structured error response:
+Przykład rejestracji:
+
+```json
+{
+  "email": "player@example.com",
+  "password": "secret123",
+  "phone": "+48123123123",
+  "firstName": "Jan",
+  "lastName": "Przykładowy",
+  "displayName": "Jan P.",
+  "jumpCm": 45
+}
+```
+
+### Konto i profil
+
+| Metoda | Endpoint | Działanie |
+|---|---|---|
+| `GET` | `/api/users/me` | Pobiera dane zalogowanego konta. |
+| `PUT` | `/api/users/me` | Aktualizuje dane konta. |
+| `PUT` | `/api/users/me/password` | Zmienia hasło. |
+| `DELETE` | `/api/users/me` | Usuwa/dezaktywuje konto. |
+| `POST` | `/api/profiles` | Tworzy profil zalogowanego użytkownika. |
+| `GET` | `/api/profiles/me` | Pobiera własny profil. |
+| `GET` | `/api/profiles/{profileExternalId}` | Pobiera profil po UUID. |
+| `PUT` | `/api/profiles` | Aktualizuje własny profil. |
+| `DELETE` | `/api/profiles/me` | Usuwa własny profil, jeśli nie jest używany. |
+
+### Kluby
+
+| Metoda | Endpoint | Działanie |
+|---|---|---|
+| `POST` | `/api/clubs` | Tworzy klub; twórca otrzymuje członkostwo właściciela. |
+| `GET` | `/api/clubs/my-clubs` | Zwraca kluby zalogowanego użytkownika. |
+| `GET` | `/api/clubs/search?query={tekst}` | Wyszukuje kluby po nazwie. |
+| `GET` | `/api/clubs/{clubExternalId}` | Pobiera podstawowe informacje o klubie. |
+| `GET` | `/api/clubs/{clubExternalId}/details` | Pobiera szczegóły klubu i jego członków. |
+| `PUT` | `/api/clubs/{clubExternalId}` | Aktualizuje klub zgodnie z uprawnieniami. |
+| `DELETE` | `/api/clubs/{clubExternalId}` | Dezaktywuje klub zgodnie z uprawnieniami. |
+
+### Członkostwa i zawodnicy
+
+| Metoda | Endpoint | Działanie |
+|---|---|---|
+| `POST` | `/api/memberships` | Dodaje członka do klubu. |
+| `GET` | `/api/memberships/{clubExternalId}/players` | Pobiera zawodników klubu; opcjonalnie `?active=true`. |
+| `GET` | `/api/memberships/{clubExternalId}/members` | Pobiera członków klubu; opcjonalnie `?active=true`. |
+| `GET` | `/api/memberships/{clubExternalId}/{membershipExternalId}` | Pobiera szczegóły członkostwa. |
+| `PUT` | `/api/memberships/{clubExternalId}/{membershipExternalId}` | Aktualizuje członkostwo. |
+| `DELETE` | `/api/memberships/{clubExternalId}/{membershipExternalId}` | Usuwa członkostwo. |
+
+### Mecze i statystyki
+
+Endpointy meczowe mają bazową ścieżkę `/internal/matches`.
+
+| Metoda | Endpoint | Działanie |
+|---|---|---|
+| `POST` | `/internal/matches` | Tworzy mecz. |
+| `PUT` | `/internal/matches/{matchExternalId}` | Aktualizuje mecz. |
+| `GET` | `/internal/matches?clubExternalId={uuid}&season={rok}` | Pobiera mecze klubu; parametr `season` jest opcjonalny. |
+| `GET` | `/internal/matches/{clubExternalId}/{matchExternalId}` | Pobiera szczegóły meczu. |
+| `PUT` | `/internal/matches/{clubExternalId}/{matchExternalId}/mvp` | Ustawia MVP meczu. |
+| `POST` | `/internal/matches/{clubExternalId}/{matchExternalId}/set` | Dodaje set do meczu. |
+| `PUT` | `/internal/matches/{clubExternalId}/{matchExternalId}/set/{setExternalId}` | Aktualizuje wynik setu. |
+| `PUT` | `/internal/matches/{clubExternalId}/{matchExternalId}/set/{setExternalId}/video` | Ustawia link do nagrania setu. |
+| `POST` | `/internal/matches/{matchExternalId}/finish` | Kończy mecz. |
+| `DELETE` | `/internal/matches/{clubExternalId}/{matchExternalId}/set/{setExternalId}` | Usuwa set. |
+| `GET` | `/internal/matches/{clubExternalId}/{matchExternalId}/set/{setExternalId}/statistics` | Pobiera statystyki setu. |
+| `PUT` | `/internal/matches/{clubExternalId}/{matchExternalId}/set/{setExternalId}/statistics` | Zapisuje statystyki setu. |
+| `GET` | `/internal/matches/clubs/{clubExternalId}/players/{playerExternalId}/statistics` | Pobiera statystyki kariery zawodnika w klubie. |
+| `GET` | `/internal/matches/clubs/{clubExternalId}/getSeasons` | Pobiera sezony dostępne dla klubu. |
+
+Przykładowe żądanie utworzenia meczu:
+
+```json
+{
+  "createdByClubExternalId": "2342f555-018b-8171-eb54-e18d1780d0d8",
+  "homeClubExternalId": "2342f555-018b-8171-eb54-e18d1780d0d8",
+  "awayClubExternalId": "85fac36f-58a8-6d90-e2de-01ce9ca9c514",
+  "scheduledAt": "2026-12-12T16:00:00Z",
+  "matchLocation": {
+    "city": "Miasto Demo",
+    "zipCode": "00-001",
+    "street": "Sportowa",
+    "buildingNumber": "1"
+  },
+  "season": 2026
+}
+```
+
+## Błędy API
+
+Błędy walidacji zawierają status HTTP, komunikat i listę błędów pól. Przykład:
 
 ```json
 {
@@ -278,26 +220,23 @@ The API returns a simple structured error response:
   "fieldErrors": [
     {
       "field": "email",
-      "rejectedValue": "wrong-email",
+      "rejectedValue": "invalid-email",
       "message": "invalid email format"
     }
   ]
 }
 ```
 
-For non-validation errors, `fieldErrors` is empty.
+Hasła nie są zwracane w `rejectedValue`. Brak uwierzytelnienia zwraca `401`,
+brak uprawnień `403`, nieznany zasób `404`, a konflikt danych `409`.
 
-## Current Status
+## Testy
 
-The current codebase represents an MVP version of the backend. Core authentication, user account management, profiles, clubs and club memberships are implemented. The project is still actively developed and is intended as a portfolio project rather than a production-ready system.
+Uruchom testy i weryfikację projektu:
 
-Planned improvements:
+```bash
+./mvnw clean verify
+```
 
-- Tests for main business flows.
-- More complete OpenAPI documentation.
-- Match module with match schedule, status and results.
-- Domain events for selected asynchronous processes.
-
-## Notes For Reviewers
-
-This repository is intended as a backend portfolio project. The goal is to show practical Spring Boot development: layered architecture, REST API design, JPA mappings, JWT security, transaction boundaries, Flyway migrations and basic domain rules for a sports club management system.
+Testy repozytoriów korzystają z H2. Lokalne uruchomienie aplikacji z profilem
+`demo` korzysta z PostgreSQL i Compose.

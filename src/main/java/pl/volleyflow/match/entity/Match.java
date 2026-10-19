@@ -68,6 +68,9 @@ public class Match {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    @Column(name = "season_number", nullable = false)
+    private int seasonNumber;
+
     @Version
     private int version;
 

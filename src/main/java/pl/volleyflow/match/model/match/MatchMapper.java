@@ -26,6 +26,7 @@ public final class MatchMapper {
                 .location(mapToAddress(request.matchLocation()))
                 .createdBy(createdBy)
                 .createdByClub(createdByClub)
+                .seasonNumber(request.season())
                 .build();
 
         match.addTeam(mapToTeam(homeClub, MatchSide.HOME));
@@ -40,6 +41,7 @@ public final class MatchMapper {
                                     Club awayClub) {
         match.setScheduledAt(request.scheduledAt());
         match.setLocation(mapToAddress(request.location()));
+        match.setSeasonNumber(request.season());
         updateTeam(match, homeClub, MatchSide.HOME);
         updateTeam(match, awayClub, MatchSide.AWAY);
     }
@@ -60,6 +62,7 @@ public final class MatchMapper {
                         .sorted(Comparator.comparing(SetEntity::getSetNumber))
                         .map(SetMapper::mapToDto)
                         .toList())
+                .season(match.getSeasonNumber())
                 .build();
     }
 

@@ -3,6 +3,7 @@ package pl.volleyflow.match.model.match;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -23,5 +24,9 @@ public record MatchCreateRequest(
 
         @Valid
         @NotNull(message = "match location cannot be null")
-        MatchLocation matchLocation) {
+        MatchLocation matchLocation,
+
+        @NotNull(message = "season cannot be null")
+        @Positive(message = "season must be more then 0")
+        Integer season) {
 }

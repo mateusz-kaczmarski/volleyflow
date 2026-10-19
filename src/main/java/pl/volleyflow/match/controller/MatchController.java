@@ -42,10 +42,11 @@ public class MatchController {
         return ResponseEntity.ok(matchService.updateMatch(matchExternalId, matchUpdateRequest, principal.getName()));
     }
 
-    @GetMapping
+    @GetMapping()
     ResponseEntity<List<MatchDto>> getClubMatches(@RequestParam UUID clubExternalId,
+                                                  @RequestParam(required = false) Integer season,
                                                   Principal principal) {
-        return ResponseEntity.ok(matchService.getClubMatches(clubExternalId, principal.getName()));
+        return ResponseEntity.ok(matchService.getClubMatches(clubExternalId, principal.getName(), season));
     }
 
     @GetMapping("/{clubExternalId}/{matchExternalId}")
@@ -147,6 +148,12 @@ public class MatchController {
                 clubExternalId,
                 playerExternalId,
                 principal.getName()));
+    }
+
+    @GetMapping("/clubs/{clubExternalId}/getSeasons")
+    List<Integer> getSeasonsForClub(@PathVariable UUID clubExternalId,
+                                    Principal principal) {
+        return matchService.getAllSeasonsForClub(clubExternalId, principal.getName());
     }
 
 }

@@ -13,12 +13,12 @@ import pl.volleyflow.clubmembership.model.ClubMembershipRole;
 import pl.volleyflow.clubmembership.repository.ClubMembershipRepository;
 import pl.volleyflow.match.entity.Match;
 import pl.volleyflow.match.entity.SetEntity;
-import pl.volleyflow.match.model.match.*;
-import pl.volleyflow.match.model.set.SetCreateRequest;
-import pl.volleyflow.match.model.set.SetMapper;
 import pl.volleyflow.match.model.exceptions.MatchNotFoundException;
 import pl.volleyflow.match.model.exceptions.MatchTeamsMustBeDifferentException;
 import pl.volleyflow.match.model.exceptions.SetException;
+import pl.volleyflow.match.model.match.*;
+import pl.volleyflow.match.model.set.SetCreateRequest;
+import pl.volleyflow.match.model.set.SetMapper;
 import pl.volleyflow.match.repository.MatchRepository;
 import pl.volleyflow.match.repository.SetRepository;
 import pl.volleyflow.match.repository.SetStatisticsRepository;
@@ -104,13 +104,17 @@ public class MatchServiceImpl implements MatchService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<MatchDto> getClubMatches(UUID clubExternalId, String email) {
+    public List<MatchDto> getClubMatches(UUID clubExternalId, String email, Integer season) {
         UserAccount userAccount = getUserOrThrow(email);
         Club club = getClubByExternalId(clubExternalId);
 
         requireActiveMembership(userAccount, club);
 
-        return matchRepository.findByCreatedByClubExternalIdOrderByScheduledAtAsc(clubExternalId).stream()
+        List<Match> matches = season == null
+                ? matchRepository.findByCreatedByClubExternalIdOrderByScheduledAtAsc(clubExternalId)
+                : matchRepository.findByCreatedByClubExternalIdAndSeasonNumberOrderByScheduledAtAsc(clubExternalId, season);
+
+        return matches.stream()
                 .map(MatchMapper::mapToDto)
                 .toList();
     }
@@ -145,7 +149,6 @@ public class MatchServiceImpl implements MatchService {
     }
 
 
-
     @Transactional
     @Override
     public void finishMatch(UUID matchExternalId, String email) {
@@ -173,6 +176,15 @@ public class MatchServiceImpl implements MatchService {
             throw new SetException("Cannot finish match");
         }
 
+    }
+
+    @Override
+    public List<Integer> getAllSeasonsForClub(UUID clubExternalId, String email) {
+        UserAccount userAccount = getUserOrThrow(email);
+        Club club = getClubByExternalId(clubExternalId);
+        requireActiveMembership(userAccount, club);
+
+        return matchRepository.findDistinctSeasonNumbersByCreatedByClub(club);
     }
 
     private Match findMatchOrThrow(UUID matchExternalId) {

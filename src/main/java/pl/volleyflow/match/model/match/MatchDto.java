@@ -20,5 +20,6 @@ public record MatchDto(
         Instant finishedAt,
         UUID mvpPlayerExternalId,
         MatchLocation matchLocation,
-        List<SetDto> sets) {
+        List<SetDto> sets,
+        int season) {
 }

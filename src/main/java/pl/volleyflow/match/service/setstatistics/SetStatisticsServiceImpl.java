@@ -188,6 +188,13 @@ public class SetStatisticsServiceImpl implements SetStatisticsService {
         int awaySets = (int) match.getSets().stream()
                 .filter(set -> set.getAwayPoints() > set.getHomePoints())
                 .count();
+        if (match.getStatus() == MatchStatus.FINISHED && match.getSets().stream()
+                .allMatch(set -> set.getHomePoints() == 0 && set.getAwayPoints() == 0)) {
+            homeSets = match.getTeams().stream().filter(team -> team.getSide() == MatchSide.HOME)
+                    .mapToInt(team -> team.getSetsWon()).findFirst().orElse(0);
+            awaySets = match.getTeams().stream().filter(team -> team.getSide() == MatchSide.AWAY)
+                    .mapToInt(team -> team.getSetsWon()).findFirst().orElse(0);
+        }
         boolean clubIsHome = match.getTeams().stream()
                 .anyMatch(team -> team.getClub().getId().equals(club.getId()) && team.getSide() == MatchSide.HOME);
         AttackStatisticsDto attack = attackStatistics(statistics);

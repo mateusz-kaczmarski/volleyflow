@@ -3,6 +3,8 @@ package pl.volleyflow.match.model.match;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -20,5 +22,9 @@ public record MatchUpdateRequest(
         UUID homeClubExternalId,
 
         @NotNull(message = "away club externalId cannot be null")
-        UUID awayClubExternalId) {
+        UUID awayClubExternalId,
+
+        @NotNull(message = "season cannot be null")
+        @Positive(message = "season must be more then 0")
+        Integer season) {
 }

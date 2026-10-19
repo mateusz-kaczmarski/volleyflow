@@ -13,12 +13,14 @@ public interface MatchService {
 
     MatchDto updateMatch(UUID matchExternalId, MatchUpdateRequest request, String email);
 
-    List<MatchDto> getClubMatches(UUID clubExternalId, String email);
+    List<MatchDto> getClubMatches(UUID clubExternalId, String email, Integer season);
 
     MatchDto getMatchDetails(UUID matchExternalId, UUID clubExternalId, String email);
 
     MatchDto updateMvp(UUID matchExternalId, UUID clubExternalId, UUID mvpPlayerExternalId, String email);
 
     void finishMatch(UUID matchExternalId, String email);
+
+    List<Integer> getAllSeasonsForClub(UUID clubExternalId, String email);
 
 }

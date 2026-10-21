@@ -37,7 +37,7 @@ docker compose up -d --wait
 Uruchom aplikację z fikcyjnymi danymi demonstracyjnymi:
 
 ```bash
-SPRING_CONFIG_LOCATION=classpath:/ ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+SPRING_CONFIG_LOCATION=classpath:/ ./mvnw spring-boot:run
 ```
 
 `SPRING_CONFIG_LOCATION=classpath:/` wymusza użycie konfiguracji z zasobów
@@ -45,7 +45,7 @@ aplikacji. Na Windows PowerShell:
 
 ```powershell
 $env:SPRING_CONFIG_LOCATION='classpath:/'
-./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=demo
+./mvnw.cmd spring-boot:run
 ```
 
 Aplikacja jest dostępna pod adresem `http://localhost:8080`.
@@ -81,7 +81,7 @@ loopback komputera.
 
 ### Dane demonstracyjne
 
-Aktywuj profil Spring `demo`, aby Flyway załadował fixture z fikcyjnymi danymi:
+Flyway domyślnie ładuje przy starcie aplikacji fikcyjne dane demonstracyjne:
 
 - Aurora Volley oraz kluby Orion Volley i Polaris Volley;
 - właściciel klubu, trener i 12 przykładowych zawodników;
@@ -238,5 +238,5 @@ Uruchom testy i weryfikację projektu:
 ./mvnw clean verify
 ```
 
-Testy repozytoriów korzystają z H2. Lokalne uruchomienie aplikacji z profilem
-`demo` korzysta z PostgreSQL i Compose.
+Testy repozytoriów korzystają z H2. Lokalne uruchomienie aplikacji korzysta
+z PostgreSQL i Compose oraz domyślnie ładuje dane demonstracyjne.

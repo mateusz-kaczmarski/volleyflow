@@ -1,4 +1,4 @@
--- Fictional, deterministic development fixture. Enabled only by the demo profile.
+-- Fictional, deterministic development fixture. Loaded by the default Flyway configuration.
 -- Existing V1 fixtures remain intact. Generated IDs use the normal DB sequences.
 -- Once the Aurora owner exists, never overwrite locally edited demo data.
 DO $demo$

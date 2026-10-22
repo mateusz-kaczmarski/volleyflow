@@ -1,4 +1,4 @@
-package pl.volleyflow.auth.exceptions;
+package pl.volleyflow.auth.model.exception;
 
 public class InvalidCredentialsException extends RuntimeException {
     public InvalidCredentialsException(String message) {

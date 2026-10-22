@@ -1,4 +1,4 @@
-package pl.volleyflow.auth.controller;
+package pl.volleyflow.auth.model;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

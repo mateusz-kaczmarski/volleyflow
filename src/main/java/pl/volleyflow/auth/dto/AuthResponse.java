@@ -10,8 +10,11 @@ public record AuthResponse(
         String message,
         UUID externalId) {
 
-    public static AuthResponse registerSuccess(String token, UUID externalId) {
-        return new AuthResponse(token, "User registered successfully", externalId);
+    public static AuthResponse registerSuccess(UUID externalId) {
+        return new AuthResponse(
+                null,
+                "User registered successfully, active your account by the email",
+                externalId);
     }
 
     public static AuthResponse loginSuccess(String token, UUID externalId) {

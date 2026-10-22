@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.volleyflow.auth.dto.AuthResponse;
+import pl.volleyflow.auth.model.UserLoginRequest;
 import pl.volleyflow.auth.service.AuthService;
 import pl.volleyflow.user.model.UserRegisterRequest;
 

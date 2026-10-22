@@ -2,13 +2,16 @@ package pl.volleyflow.auth.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.volleyflow.auth.controller.UserLoginRequest;
 import pl.volleyflow.auth.dto.AuthResponse;
-import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
+import pl.volleyflow.auth.event.UserRegisteredEvent;
+import pl.volleyflow.auth.model.UserLoginRequest;
+import pl.volleyflow.auth.model.exception.InvalidCredentialsException;
 import pl.volleyflow.common.StringNormalizer;
+import pl.volleyflow.personprofile.model.PersonProfile;
 import pl.volleyflow.personprofile.model.PersonProfileCreateRequest;
 import pl.volleyflow.personprofile.service.PersonProfileService;
 import pl.volleyflow.security.JwtService;
@@ -31,6 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private final PersonProfileService personProfileService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -41,14 +45,22 @@ public class AuthServiceImpl implements AuthService {
         UserAccountRequest userRequest = getUserAccountRequest(request);
 
         UserAccountDto userDto = userAccountService.create(userRequest);
+
         UserAccount userAccount = userAccountService.findByEmail(userDto.email())
                 .orElseThrow(() -> new InvalidCredentialsException("User account was not created correctly"));
-        personProfileService.createProfile(userAccount, getPersonProfileRequest(request));
-        String token = jwtService.generateToken(userAccount);
+
+        PersonProfile profile = personProfileService.createProfile(userAccount, getPersonProfileRequest(request));
+
+        applicationEventPublisher.publishEvent(new UserRegisteredEvent(
+                this,
+                userAccount.getExternalId(),
+                userAccount.getEmail(),
+                profile.getFirstName(),
+                profile.getLastName()));
 
         log.info("User registered successfully: email={}, externalId={}", userDto.email(), userDto.externalId());
 
-        return AuthResponse.registerSuccess(token, userDto.externalId());
+        return AuthResponse.registerSuccess(userDto.externalId());
     }
 
     @Override
@@ -81,8 +93,7 @@ public class AuthServiceImpl implements AuthService {
         return new UserAccountRequest(
                 StringNormalizer.normalizeEmail(request.email()),
                 request.password(),
-                request.phone()
-        );
+                request.phone());
     }
 
     private PersonProfileCreateRequest getPersonProfileRequest(UserRegisterRequest request) {
@@ -90,8 +101,7 @@ public class AuthServiceImpl implements AuthService {
                 request.firstName(),
                 request.lastName(),
                 request.displayName(),
-                request.jumpCm()
-        );
+                request.jumpCm());
     }
 
 }

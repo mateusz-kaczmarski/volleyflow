@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aktywuj konto w VolleyFlow</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f1f5f9; font-family:Arial,Helvetica,sans-serif; color:#0f172a;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+       style="background-color:#f1f5f9;">
+    <tr>
+        <td align="center" style="padding:32px 16px;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+                   style="max-width:560px; background-color:#ffffff; border:1px solid #e2e8f0; border-radius:16px;">
+                <tr>
+                    <td style="padding:32px 28px 24px; border-bottom:1px solid #e2e8f0;">
+                        <p style="margin:0; font-size:26px; line-height:34px; font-weight:bold; color:#047857;">
+                            VolleyFlow
+                        </p>
+                        <p style="margin:6px 0 0; font-size:14px; line-height:22px; color:#64748b;">
+                            Twoja drużyna. Twoja gra.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:28px;">
+                        <h1 style="margin:0 0 20px; font-size:26px; line-height:34px;">
+                            Jeszcze jeden krok do gry!
+                        </h1>
+                        <p style="margin:0 0 16px; font-size:16px; line-height:26px;">
+                            Cześć<span th:if="${firstName != null and !#strings.isEmpty(#strings.trim(firstName))}">,
+                            <span th:text="${firstName}">Mateusz</span></span>!
+                        </p>
+                        <p style="margin:0 0 24px; font-size:16px; line-height:26px; color:#334155;">
+                            Dziękujemy za rejestrację w VolleyFlow. Potwierdź swój adres e-mail,
+                            aby aktywować konto i dołączyć do gry.
+                        </p>
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td align="center" bgcolor="#047857" style="border-radius:8px;">
+                                    <a th:href="${activationUrl}"
+                                       style="display:inline-block; padding:15px 26px; border:1px solid #047857; border-radius:8px; font-size:16px; line-height:22px; font-weight:bold; color:#ffffff; text-decoration:none;">
+                                        Aktywuj konto
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                        <p style="margin:24px 0 16px; font-size:14px; line-height:23px; color:#475569;">
+                            Link jest ważny przez <strong>15 minut od wygenerowania</strong>.
+                            Jeśli wygaśnie, poproś o ponowne wysłanie wiadomości aktywacyjnej.
+                            Po ponownej wysyłce użyj najnowszego linku.
+                        </p>
+                        <p style="margin:0 0 8px; font-size:14px; line-height:23px; color:#475569;">
+                            Jeśli przycisk nie działa, skopiuj poniższy adres do przeglądarki:
+                        </p>
+                        <p style="margin:0; font-size:12px; line-height:20px; word-break:break-all; overflow-wrap:anywhere;">
+                            <a th:href="${activationUrl}" th:text="${activationUrl}"
+                               style="color:#047857; text-decoration:underline;">Link aktywacyjny</a>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:20px 28px; border-top:1px solid #e2e8f0; background-color:#f8fafc;">
+                        <p style="margin:0; font-size:12px; line-height:20px; color:#64748b;">
+                            Jeśli nie zakładałeś konta w VolleyFlow, zignoruj tę wiadomość.
+                            Bez aktywacji konto pozostanie nieaktywne.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

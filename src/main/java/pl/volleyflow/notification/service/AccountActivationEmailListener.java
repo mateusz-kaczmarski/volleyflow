@@ -11,14 +11,16 @@ import pl.volleyflow.auth.event.AccountActivationEmailRequested;
 @Log4j2
 public class AccountActivationEmailListener {
 
+    private final EmailService emailService;
+
     @KafkaListener(
             topics = "${app.kafka.topics.user-account-created}",
             groupId = "volleyflow")
-    public void sendRegistrationEmail(AccountActivationEmailRequested emailRequested) {
-        //todo tmp solution, to do email service
-        log.info("Successfully get event for eventId: {}, userId: {} ",
+    public void sendAccountActivationEmail(AccountActivationEmailRequested emailRequested) {
+        log.info("Received activation email request: eventId={}, userExternalId={}",
+                emailRequested.eventId(), emailRequested.userExternalId());
+        emailService.sendActivationEmail(emailRequested);
+        log.info("Activation email submitted to SMTP: eventId={}, userExternalId={}",
                 emailRequested.eventId(), emailRequested.userExternalId());
     }
-
-
 }

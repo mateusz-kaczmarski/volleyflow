@@ -1,12 +1,18 @@
-# Volleyflow
+# VolleyFlow
 
-Volleyflow to REST API do zarządzania amatorskim klubem siatkarskim. Aplikacja
-obsługuje konta użytkowników, profile zawodników, członkostwa w klubach, mecze,
-sety oraz statystyki meczowe. Zasoby są identyfikowane w API przez UUID.
+VolleyFlow pomaga prowadzić amatorski klub siatkarski: zarządzać składem,
+planować mecze i zapisywać wyniki oraz statystyki setów. Repozytorium zawiera
+backend REST w Javie i demonstracyjny frontend Angular, dzięki któremu można
+przejść przez aplikację bez ręcznego wysyłania żądań do API.
+
+Projekt rozwijam przede wszystkim po stronie backendu: modeluję procesy i dane,
+implementuję API oraz integracje Spring Boot, PostgreSQL, Redis i Kafka. Frontend
+powstał i jest rozwijany przy wsparciu narzędzi AI; używam go do demonstracji
+i testowania funkcji aplikacji.
 
 ## Funkcje
 
-- Rejestracja i logowanie użytkownika z uwierzytelnianiem JWT.
+- Rejestracja z aktywacją konta przez e-mail oraz logowanie z JWT.
 - Zarządzanie kontem i profilem użytkownika.
 - Tworzenie klubów oraz zarządzanie ich członkami.
 - Role członków klubu: `OWNER`, `TRAINER`, `PLAYER`, `STATISTIC`.
@@ -14,19 +20,23 @@ sety oraz statystyki meczowe. Zasoby są identyfikowane w API przez UUID.
 - Rejestrowanie wyników setów, nagrań wideo, MVP i statystyk zawodników.
 - Pobieranie statystyk meczu, setu i kariery zawodnika.
 - Walidacja żądań i ujednolicone odpowiedzi błędów.
+- Asynchroniczne zlecanie wiadomości aktywacyjnych przez Kafka; Redis przechowuje
+  czasowe hashe tokenów aktywacyjnych.
 
 ## Technologie
 
 - Java 17, Spring Boot 4
 - Spring Web MVC, Spring Data JPA, Spring Security
-- PostgreSQL i Flyway
+- PostgreSQL, Flyway, Redis i Kafka
 - JWT (`jjwt`)
-- Maven, Docker Compose
+- Angular 20, TypeScript, Node.js/npm
+- Maven, Docker Compose, Mailpit
 - Springdoc OpenAPI
 
 ## Uruchomienie lokalne
 
-Wymagane: Java 17, Docker z Docker Compose.
+Wymagane: Java 17, Docker z Docker Compose oraz Node.js 20.19+ (lub 22.12+)
+z npm.
 
 Uruchom lokalne usługi infrastruktury:
 
@@ -49,6 +59,38 @@ $env:SPRING_CONFIG_LOCATION='classpath:/'
 ```
 
 Aplikacja jest dostępna pod adresem `http://localhost:8080`.
+
+W osobnym terminalu uruchom frontend:
+
+```bash
+cd frontend
+npm ci
+npm start
+```
+
+Interfejs będzie dostępny pod adresem <http://localhost:4200>. Dev server
+przekazuje żądania `/api` i `/internal` do backendu na porcie 8080. Zależności,
+cache Angulara i wynik builda są tworzone lokalnie — nie są przechowywane w Git.
+
+### Pierwsze uruchomienie i konto demonstracyjne
+
+Otwórz <http://localhost:4200>. Do szybkiego obejrzenia aplikacji użyj konta
+demonstracyjnego:
+
+```text
+e-mail: aurora.owner@example.com
+hasło:  demo1234
+```
+
+Możesz też sprawdzić pełny proces rejestracji:
+
+1. Załóż konto w formularzu rejestracji.
+2. Otwórz <http://localhost:8025> i znajdź wiadomość aktywacyjną.
+3. Kliknij link — frontend automatycznie wyśle żądanie aktywacji do backendu.
+4. Po potwierdzeniu wróć do logowania i zaloguj się nowym kontem.
+
+Lokalny Mailpit przechwytuje wiadomości, więc do testu nie potrzeba prawdziwej
+skrzynki ani zewnętrznego dostawcy poczty.
 
 ### Usługi lokalne
 
@@ -116,8 +158,13 @@ Authorization: Bearer <jwt-token>
 
 | Metoda | Endpoint | Działanie |
 |---|---|---|
-| `POST` | `/api/auth/register` | Rejestruje konto i tworzy jego profil; zwraca token JWT. |
+| `POST` | `/api/auth/register` | Tworzy konto oczekujące na aktywację i jego profil; nie zwraca JWT. |
 | `POST` | `/api/auth/login` | Uwierzytelnia użytkownika i zwraca token JWT. |
+| `POST` | `/api/auth/activate?userExternalId={uuid}&token={token}` | Weryfikuje link aktywacyjny i aktywuje konto. |
+
+Nowe konto otrzymuje status oczekujący. Wysyłka wiadomości aktywacyjnej jest
+zlecana asynchronicznie przez Kafkę, a hash tokenu z 15-minutowym TTL jest przechowywany
+w Redisie. JWT jest wydawany podczas logowania po aktywacji.
 
 Przykład rejestracji:
 

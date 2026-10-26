@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title">
+  <title>Red Crew</title>
+  <rect width="240" height="240" rx="48" fill="#101827"/>
+  <path d="M42 84 120 35l78 49v77l-78 44-78-44Z" fill="#ef5c63"/>
+  <path d="m76 96 44 71 44-71h-25l-19 32-19-32Z" fill="#101827"/>
+  <circle cx="120" cy="120" r="15" fill="#2dd4bf"/>
+  <text x="120" y="218" text-anchor="middle" fill="#f8fafc" font-family="Arial, sans-serif" font-size="19" font-weight="800" letter-spacing="3">RED CREW</text>
+</svg>

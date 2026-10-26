@@ -5,3 +5,7 @@ target/
 *.iml
 
 *.log
+
+# Runtime configuration from other branches must not enter backend commits.
+/config/application.properties
+/config/postgres.env

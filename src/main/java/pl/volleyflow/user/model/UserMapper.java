@@ -6,12 +6,11 @@ import pl.volleyflow.user.entity.UserAccountStatus;
 public class UserMapper {
 
     public static UserAccount mapToEntity(UserAccountRequest userAccountRequest) {
-        //todo change email and status after add email service
         return UserAccount.builder()
                 .email(userAccountRequest.email())
-                .emailVerified(true)
+                .emailVerified(false)
                 .lastLoginAt(null)
-                .status(UserAccountStatus.ACTIVE)
+                .status(UserAccountStatus.PENDING)
                 .phone(userAccountRequest.phone())
                 .build();
     }

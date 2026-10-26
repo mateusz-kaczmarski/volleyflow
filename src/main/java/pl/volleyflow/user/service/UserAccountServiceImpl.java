@@ -5,7 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
+import pl.volleyflow.auth.model.exception.InvalidCredentialsException;
 import pl.volleyflow.common.StringNormalizer;
 import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.entity.UserAccountStatus;
@@ -37,12 +37,13 @@ public class UserAccountServiceImpl implements UserAccountService {
                 userAccountRequest.password(),
                 normalizedPhone
         ));
-        userAccount.setPasswordHash(passwordEncoder.encode(userAccountRequest.password()));
 
+        userAccount.setPasswordHash(passwordEncoder.encode(userAccountRequest.password()));
         UserAccount savedUser = userAccountRepository.save(userAccount);
         UserAccountDto userAccountDto = UserMapper.mapToDto(savedUser);
 
-        log.info("Created user account: email={}, externalId={}", userAccountDto.email(), userAccountDto.externalId());
+        log.info("Created user account: email={}, externalId={}",
+                userAccountDto.email(), userAccountDto.externalId());
         return userAccountDto;
     }
 

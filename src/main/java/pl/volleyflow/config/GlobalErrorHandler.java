@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pl.volleyflow.auth.controller.GlobalErrorResponse;
 import pl.volleyflow.auth.controller.GlobalErrorResponse.FieldErrorResponse;
-import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
+import pl.volleyflow.auth.model.exception.InvalidCredentialsException;
 import pl.volleyflow.club.model.ClubAlreadyExists;
 import pl.volleyflow.club.model.ClubNotFoundException;
 import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;

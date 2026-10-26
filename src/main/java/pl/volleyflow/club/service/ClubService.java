@@ -1,9 +1,6 @@
 package pl.volleyflow.club.service;
 
-import pl.volleyflow.club.model.ClubBasicDto;
-import pl.volleyflow.club.model.ClubDetailsDto;
-import pl.volleyflow.club.model.ClubRequest;
-import pl.volleyflow.club.model.ClubUpdateRequest;
+import pl.volleyflow.club.model.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,5 +18,7 @@ public interface ClubService {
     ClubBasicDto getClub(UUID clubExternalId);
 
     ClubDetailsDto getClubDetails(UUID clubExternalId, String userEmail);
+
+    List<ClubBasicDto> getClubsByName(String clubName, String userEmail);
 
 }

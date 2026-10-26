@@ -24,7 +24,7 @@ public class ClubController {
 
     @PostMapping()
     ResponseEntity<ClubBasicDto> createClub(@RequestBody @Valid ClubRequest clubRequest,
-                                             Principal principal) {
+                                            Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED).body(clubService.createClub(clubRequest, principal.getName()));
     }
 
@@ -56,6 +56,12 @@ public class ClubController {
                                     Principal principal) {
         clubService.deleteClub(clubExternalId, principal.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    ResponseEntity<List<ClubBasicDto>> getClubsByName(@RequestParam String query,
+                                                      Principal principal) {
+        return ResponseEntity.ok(clubService.getClubsByName(query, principal.getName()));
     }
 
 }

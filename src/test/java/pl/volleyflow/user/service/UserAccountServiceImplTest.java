@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import pl.volleyflow.auth.exceptions.InvalidCredentialsException;
+import pl.volleyflow.auth.model.exception.InvalidCredentialsException;
 import pl.volleyflow.user.entity.UserAccount;
 import pl.volleyflow.user.entity.UserAccountStatus;
 import pl.volleyflow.user.model.UserAccountAlreadyExists;
@@ -74,7 +74,7 @@ class UserAccountServiceImplTest {
                         UserAccount::getPasswordHash,
                         UserAccount::getStatus,
                         UserAccount::isEmailVerified)
-                .containsExactly(EMAIL, PHONE, PASSWORD_HASH, UserAccountStatus.ACTIVE, true);
+                .containsExactly(EMAIL, PHONE, PASSWORD_HASH, UserAccountStatus.PENDING, false);
     }
 
     @Test

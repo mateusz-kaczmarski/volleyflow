@@ -1,0 +1,164 @@
+<section class="center-header">
+  <p class="eyebrow">CENTRUM STATYSTYK</p>
+  <h2>{{ playerLabel() }}</h2>
+  <p>Statystyki z zakończonych spotkań · {{ selectedMatch() ? 'wybrany mecz' : 'wszystkie mecze' }}</p>
+  <div class="filters">
+    <button class="filter-button" (click)="openPicker('player')" aria-haspopup="dialog">
+      <span>Wybierz zawodnika</span><strong>{{ playerLabel() }}</strong><b aria-hidden="true">⌄</b>
+    </button>
+    <button class="filter-button" (click)="openPicker('match')" aria-haspopup="dialog">
+      <span>Wybierz mecz</span><strong>{{ matchLabel() }}</strong>
+      @if (selectedMatch(); as match) { <small>{{ match.scheduledAt | date:'dd.MM.yyyy' }} · {{ score(match) }}</small> }
+      <b aria-hidden="true">⌄</b>
+    </button>
+  </div>
+  @if (selectedPlayerId() || selectedMatchId()) { <button class="text-button" (click)="clearFilters()">Wyczyść filtry — cały zespół i wszystkie mecze</button> }
+</section>
+
+<div class="load-status" aria-live="polite">
+  @if (loading() || matchesLoading()) { <p>Pobieranie statystyk…</p> }
+  @if (matchesError()) { <p class="error">Nie udało się pobrać listy meczów. Odśwież stronę, aby spróbować ponownie.</p> }
+  @if (playersError()) { <p class="error">Nie udało się pobrać składu. Zawodnicy z zapisanych arkuszy są nadal dostępni na liście.</p> }
+  @if (!loading() && failedSheets()) {
+    <div class="error">Nie udało się pobrać {{ failedSheets() }} arkuszy. Podsumowanie obejmuje tylko dostępne dane i może być niepełne.
+      <button class="text-button" (click)="retry()">Spróbuj ponownie</button>
+    </div>
+  }
+</div>
+
+@if (!loading() && !matchesLoading() && !matchesError()) {
+  @if (summary(); as stats) {
+    <section class="summary-grid" aria-label="Podsumowanie wybranego zakresu">
+      <article><span>MECZE / SETY Z DANYMI</span><strong>{{ recordedMatches() }} / {{ recordedSets() }}</strong><small>{{ playerLabel() }}</small></article>
+      <article><span>PUNKTY</span><strong>{{ stats.totals.points }}</strong><small>{{ averagePoints() }} pkt / set</small></article>
+      <article><span>SKUTECZNOŚĆ ATAKU</span><strong>{{ rate(stats.attackSuccess) }}</strong><small>{{ stats.totals.attackPoints }} / {{ stats.totals.attackTotal }} ataków</small></article>
+      <article><span>PRZYJĘCIE POZYTYWNE</span><strong>{{ rate(stats.receptionPositive) }}</strong><small>{{ stats.totals.receptionTotal }} przyjęć</small></article>
+    </section>
+  } @else {
+    <section class="empty-card"><h3>{{ finishedMatches().length ? 'Brak danych dla wybranego zakresu' : 'Brak zakończonych meczów' }}</h3>
+      <p>{{ finishedMatches().length ? 'Zmień filtry lub uzupełnij arkusze statystyk. Brak zapisanych danych nie oznacza wyniku zero.' : 'Statystyki pojawią się po zakończeniu meczu i zapisaniu arkusza.' }}</p>
+    </section>
+  }
+
+  @if (trend().length) {
+    <section class="trend-card">
+      <div class="section-heading"><div><p class="eyebrow">{{ selectedMatchId() ? 'SET PO SECIE' : 'MECZ PO MECZU' }}</p>
+        <h3>{{ selectedPlayerId() ? 'Trend zawodnika' : 'Trend zespołu' }}</h3>
+        <p>{{ selectedMatchId() ? 'Przebieg formy w kolejnych setach wybranego spotkania.' : 'Przebieg formy w kolejnych zakończonych spotkaniach.' }}</p>
+      </div></div>
+      <div class="trend-controls" aria-label="Wybierz wskaźnik trendu">
+        <button [class.active]="trendMetric() === 'all'" [attr.aria-pressed]="trendMetric() === 'all'" (click)="trendMetric.set('all')">Wszystkie wskaźniki</button>
+        @for (metric of metrics; track metric.key) {
+          <button [class.active]="trendMetric() === metric.key" [attr.aria-pressed]="trendMetric() === metric.key" (click)="trendMetric.set(metric.key)"><i [style.background]="metric.color"></i>{{ metric.label }}</button>
+        }
+      </div>
+      <p class="chart-note">Słupki: punkty (wysokość względem największej liczby punktów). Linie: procenty na osi po lewej. Dotknij słupka, aby zobaczyć szczegóły.</p>
+      <div class="chart-scroll" tabindex="0" aria-label="Wykres trendu, przewijany poziomo">
+        <div class="chart" [style.min-width.px]="trend().length * 96 + 56">
+          <div class="axis" aria-hidden="true">@for (tick of axisTicks(); track tick) { <span>{{ tick }}%</span> }</div>
+          <div class="plot">
+            <div class="point-bars" [style.grid-template-columns]="'repeat(' + trend().length + ', 1fr)'">
+              @for (point of trend(); track point.id) {
+                <button class="point-button" [class.selected]="activePointId() === point.id" (click)="activePointId.set(point.id)" [attr.aria-label]="point.label + ', ' + point.description + (point.summary ? ', ' + point.summary.totals.points + ' punktów' : ', brak danych')" [attr.aria-pressed]="activePointId() === point.id">
+                  @if (point.summary) { <i [style.height.%]="point.summary.totals.points / maxPoints() * 85"><b>{{ point.summary.totals.points }}{{ point.incomplete ? '*' : '' }}</b></i> }
+                  @else { <span class="no-data">Brak danych</span> }
+                </button>
+              }
+            </div>
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Trend skuteczności ataku, efektywności ataku i przyjęcia">
+              @for (metric of metrics; track metric.key) {
+                @if (trendMetric() === 'all' || trendMetric() === metric.key) {
+                  @for (path of paths(metric.key); track $index) { <polyline [attr.points]="path" [attr.stroke]="metric.color"></polyline> }
+                }
+              }
+            </svg>
+            <div class="metric-points" aria-hidden="true">
+              @for (metric of metrics; track metric.key) {
+                @if (trendMetric() === 'all' || trendMetric() === metric.key) {
+                  @for (point of trend(); track point.id; let index = $index) {
+                    @if (point.summary && !point.incomplete && point.summary[metric.key] !== null) {
+                      <span [style.left.%]="x(index)" [style.top.%]="y(point.summary[metric.key]!)" [style.border-color]="metric.color"></span>
+                    }
+                  }
+                }
+              }
+            </div>
+          </div>
+          <div class="point-labels" [style.grid-template-columns]="'repeat(' + trend().length + ', 1fr)'">
+            @for (point of trend(); track point.id) { <div><strong>{{ point.label }}</strong><small>{{ point.description }}</small></div> }
+          </div>
+        </div>
+      </div>
+      @if (activePoint(); as point) {
+        <div class="point-detail" aria-live="polite"><strong>{{ point.label }} · {{ point.description }}</strong>
+          @if (point.summary; as stats) {
+            <span>{{ stats.totals.points }} pkt</span><span>Atak: {{ rate(stats.attackSuccess) }}</span><span>Efektywność: {{ rate(stats.attackEfficiency) }}</span><span>Przyjęcie: {{ rate(stats.receptionPositive) }}</span>
+            @if (point.incomplete) { <span class="error">Dane niepełne</span> }
+          } @else { <span>Brak danych{{ point.incomplete ? ' — błąd pobierania arkusza' : ' w zapisanych arkuszach' }}</span> }
+        </div>
+      }
+    </section>
+  }
+
+  @if (summary(); as stats) {
+    <section class="details-grid" aria-label="Statystyki elementów gry">
+      <article><p class="eyebrow">ATAK</p>
+        <vf-percentage-gauge [value]="stats.attackSuccess" label="Skuteczność ataku" color="#ef4444" />
+        <vf-percentage-gauge class="efficiency-gauge" [value]="stats.attackEfficiency" label="Efektywność ataku" kind="signed" />
+        <dl><div><dt>Punkty / ataki</dt><dd>{{ stats.totals.attackPoints }} / {{ stats.totals.attackTotal }}</dd></div><div><dt>Błędy / zablokowane</dt><dd>{{ stats.totals.attackError }} / {{ stats.totals.attackBlocked }}</dd></div></dl>
+      </article>
+      <article><p class="eyebrow">PRZYJĘCIE</p>
+        <div class="reception-gauges"><vf-percentage-gauge [value]="stats.receptionPositive" label="Pozytywne" color="#eab308" /><vf-percentage-gauge [value]="stats.receptionPerfect" label="Perfekcyjne" color="#8b5cf6" /></div>
+        <dl><div><dt>Wszystkie przyjęcia</dt><dd>{{ stats.totals.receptionTotal }}</dd></div><div><dt>Błędy</dt><dd>{{ stats.totals.receptionError }}</dd></div></dl>
+      </article>
+      <article><p class="eyebrow">ZAGRYWKA</p><h3>{{ stats.totals.serveAces }} <small>asów</small></h3>
+        <vf-percentage-gauge class="efficiency-gauge" [value]="stats.serveEfficiency" label="Efektywność zagrywki" kind="signed" />
+        <dl><div><dt>Wszystkie zagrywki</dt><dd>{{ stats.totals.serveTotal }}</dd></div><div><dt>Błędy</dt><dd>{{ stats.totals.serveError }}</dd></div></dl>
+      </article>
+      <article><p class="eyebrow">BLOK I OBRONA</p><h3>{{ stats.totals.blockPoints }} <small>punktów blokiem</small></h3>
+        <dl><div><dt>Wybloki</dt><dd>{{ stats.totals.blockTouches }}</dd></div><div><dt>Obrony</dt><dd>{{ stats.totals.defense }}</dd></div><div><dt>Asysty</dt><dd>{{ stats.totals.assists }}</dd></div></dl>
+      </article>
+    </section>
+    <section class="breakdown-grid">
+      <article><p class="eyebrow">ŹRÓDŁA PUNKTÓW</p><h3>Jak zdobywamy punkty</h3>
+        <dl><div><dt>Atak</dt><dd>{{ stats.totals.attackPoints }}</dd></div><div><dt>Zagrywka</dt><dd>{{ stats.totals.serveAces }}</dd></div><div><dt>Blok</dt><dd>{{ stats.totals.blockPoints }}</dd></div></dl>
+      </article>
+      <article><p class="eyebrow">BŁĘDY WŁASNE</p><h3>Gdzie tracimy punkty</h3>
+        <dl><div><dt>Zagrywka</dt><dd>{{ stats.totals.serveError }}</dd></div><div><dt>Przyjęcie</dt><dd>{{ stats.totals.receptionError }}</dd></div><div><dt>Atak</dt><dd>{{ stats.totals.attackError }}</dd></div></dl>
+      </article>
+      <article><p class="eyebrow">BILANS ZESPOŁU</p><h3>{{ balance().won }} zwycięstw · {{ balance().lost }} porażek</h3><p>W wybranym zakresie meczów, niezależnie od filtra zawodnika.</p><p class="chart-note">Wskaźniki zbiorcze są ważone liczbą akcji, nie liczbą zawodników.</p></article>
+    </section>
+    <section class="table-card">
+      <div class="section-heading"><div><p class="eyebrow">ZAWODNICY</p><h3>Porównanie zawodników</h3><p>Kliknij nazwisko, aby zobaczyć statystyki zawodnika. Na telefonie tabelę można przewijać.</p></div></div>
+      <div class="table-scroll" tabindex="0" aria-label="Tabela zawodników, przewijana poziomo"><table>
+        <thead><tr><th scope="col">Zawodnik</th><th scope="col">Sety</th><th scope="col">Punkty</th><th scope="col">Pkt/set</th><th scope="col">Atak</th><th scope="col">Przyjęcie</th><th scope="col">Asy</th><th scope="col">Blok</th></tr></thead>
+        <tbody>@for (player of playerTable(); track player.id) { <tr [class.selected-row]="selectedPlayerId() === player.id"><th scope="row"><button (click)="selectPlayer(player.id)">{{ player.name }} →</button></th><td>{{ player.sets }}</td><td>{{ player.summary.totals.points }}</td><td>{{ player.pointsPerSet }}</td><td>{{ rate(player.summary.attackSuccess) }}</td><td>{{ rate(player.summary.receptionPositive) }}</td><td>{{ player.summary.totals.serveAces }}</td><td>{{ player.summary.totals.blockPoints }}</td></tr> }</tbody>
+      </table></div>
+    </section>
+  }
+
+  @if (matchTable().length) {
+    <section class="table-card"><div class="section-heading"><div><p class="eyebrow">SPOTKANIA</p><h3>Statystyki meczów</h3><p>Kliknij przeciwnika, aby przejść do analizy set po secie.</p></div></div>
+      <div class="table-scroll" tabindex="0" aria-label="Tabela meczów, przewijana poziomo"><table>
+        <thead><tr><th scope="col">Data</th><th scope="col">Przeciwnik</th><th scope="col">Wynik zespołu</th><th scope="col">Punkty</th><th scope="col">Atak</th><th scope="col">Przyjęcie</th></tr></thead>
+        <tbody>@for (entry of matchTable(); track entry.match.externalId) { <tr [class.selected-row]="selectedMatchId() === entry.match.externalId"><td>{{ entry.match.scheduledAt | date:'dd.MM.yyyy' }}</td><th scope="row"><button (click)="selectMatch(entry.match.externalId)">{{ opponentName(entry.match) }} →</button>@if (entry.incomplete) { <small class="error">Dane niepełne</small> }</th><td><span class="result" [class.won]="outcome(entry.match) === 'won'" [class.lost]="outcome(entry.match) === 'lost'">{{ score(entry.match) }}</span></td><td>{{ entry.summary ? entry.summary.totals.points : '—' }}</td><td>{{ rate(entry.summary?.attackSuccess) }}</td><td>{{ rate(entry.summary?.receptionPositive) }}</td></tr> }</tbody>
+      </table></div>
+    </section>
+  }
+}
+
+<dialog #filterDialog class="filter-dialog" aria-labelledby="picker-title" (click)="$event.target === filterDialog && closePicker()" (keydown.escape)="closePicker()">
+  <div class="dialog-header"><div><p class="eyebrow">FILTR STATYSTYK</p><h3 id="picker-title">{{ picker() === 'player' ? 'Wybierz zawodnika' : 'Wybierz mecz' }}</h3></div><button class="close-button" aria-label="Zamknij wybór" (click)="closePicker()">✕</button></div>
+  <label class="search-label">{{ picker() === 'player' ? 'Szukaj zawodnika' : 'Szukaj przeciwnika lub daty' }}<input type="search" [value]="search()" (input)="search.set($any($event.target).value)" placeholder="Wpisz, aby wyszukać…"></label>
+  <div class="picker-options">
+    @if (picker() === 'player') {
+      <button class="picker-option" [class.chosen]="!selectedPlayerId()" [attr.aria-pressed]="!selectedPlayerId()" (click)="selectPlayer('')"><strong>Cały zespół</strong><span>Wszyscy zawodnicy</span><b aria-hidden="true">{{ !selectedPlayerId() ? '✓' : '' }}</b></button>
+      @if (playersLoading()) { <p>Pobieranie listy zawodników…</p> }
+      @for (player of filteredPlayers(); track player.id) { <button class="picker-option" [class.chosen]="selectedPlayerId() === player.id" [attr.aria-pressed]="selectedPlayerId() === player.id" (click)="selectPlayer(player.id)"><strong>{{ player.name }}</strong><b aria-hidden="true">{{ selectedPlayerId() === player.id ? '✓' : '' }}</b></button> }
+      @if (!filteredPlayers().length && !playersLoading()) { <p>Brak zawodników pasujących do wyszukiwania.</p> }
+    } @else {
+      <button class="picker-option" [class.chosen]="!selectedMatchId()" [attr.aria-pressed]="!selectedMatchId()" (click)="selectMatch('')"><strong>Wszystkie mecze</strong><span>Zakończone spotkania</span><b aria-hidden="true">{{ !selectedMatchId() ? '✓' : '' }}</b></button>
+      @for (match of filteredMatches(); track match.externalId) { <button class="picker-option" [class.chosen]="selectedMatchId() === match.externalId" [attr.aria-pressed]="selectedMatchId() === match.externalId" (click)="selectMatch(match.externalId)"><strong>{{ opponentName(match) }}</strong><span>{{ match.scheduledAt | date:'dd.MM.yyyy' }} · wynik {{ score(match) }}</span><b aria-hidden="true">{{ selectedMatchId() === match.externalId ? '✓' : '' }}</b></button> } @empty { <p>Brak meczów pasujących do wyszukiwania.</p> }
+    }
+  </div>
+</dialog>

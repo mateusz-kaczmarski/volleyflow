@@ -7,10 +7,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import pl.volleyflow.auth.event.AccountActivationEmailRequested;
+import pl.volleyflow.common.TokenHashUtils;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Base64;
@@ -41,7 +39,7 @@ public class AccountActivationServiceImpl implements AccountActivationService {
                 .withoutPadding()
                 .encodeToString(bytes);
 
-        byte[] hashBytes = generateHashForToken(token);
+        byte[] hashBytes = TokenHashUtils.generateHashForToken(token);
         String tokenHash = HexFormat.of().formatHex(hashBytes);
 
         String key = USER_ACTIVE_KEY + userExternalId;
@@ -87,15 +85,6 @@ public class AccountActivationServiceImpl implements AccountActivationService {
                             userExternalId
                     );
                 });
-    }
-
-    private static byte[] generateHashForToken(String token) {
-        try {
-            return MessageDigest.getInstance("SHA-256")
-                    .digest(token.getBytes(StandardCharsets.UTF_8));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
 }

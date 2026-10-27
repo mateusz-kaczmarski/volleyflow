@@ -25,6 +25,10 @@ public record AuthResponse(
         return new AuthResponse(null, "Cannot active your account", null);
     }
 
+    public static AuthResponse withMessage(String message) {
+        return new AuthResponse(null, message, null);
+    }
+
     public static AuthResponse activeSuccessfully(String token, UUID userExternalId) {
         return new AuthResponse(token, "Your account has been activated", userExternalId);
     }

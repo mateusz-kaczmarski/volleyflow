@@ -21,6 +21,12 @@ export class ApiService {
   activate(userExternalId: string, token: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>('/api/auth/activate', null, { params: { userExternalId, token } });
   }
+  requestPasswordReset(email: string): Observable<void> {
+    return this.http.post<void>('/api/auth/password-reset', { email });
+  }
+  resetPassword(token: string, newPassword: string): Observable<void> {
+    return this.http.post<void>('/api/auth/password-reset/confirm', { token, newPassword });
+  }
   logout(): void { localStorage.removeItem('volleyflow.token'); this.token.set(null); }
   clubs(): Observable<Club[]> { return this.http.get<Club[]>('/api/clubs/my-clubs'); }
   searchClubs(query: string): Observable<Club[]> { return this.http.get<Club[]>('/api/clubs/search', { params: { query } }); }

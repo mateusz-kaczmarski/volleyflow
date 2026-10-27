@@ -36,6 +36,54 @@
       </div>
     </section>
   </main>
+} @else if (passwordResetPage()) {
+  <main class="auth-layout">
+    <section class="auth-brand">
+      <div class="brand-mark">VF</div>
+      <p class="eyebrow">VOLLEYFLOW</p>
+      <h1>{{ language() === 'pl' ? 'Zagraj' : 'Get back' }}<br><em>{{ language() === 'pl' ? 'bezpiecznie.' : 'in the game.' }}</em></h1>
+      <p class="brand-copy">{{ language() === 'pl' ? 'Odzyskaj dostęp do swojego klubu.' : 'Regain access to your club.' }}</p>
+      <div class="court-lines"></div>
+    </section>
+    <section class="auth-panel">
+      <div class="appearance-controls auth-theme"><select [value]="language()" (change)="setLanguage($any($event.target).value)"><option value="pl">PL</option><option value="en">ENG</option></select></div>
+      <div class="auth-card" aria-live="polite">
+        <p class="eyebrow">VOLLEYFLOW</p>
+        @if (passwordResetCompletePage() && !passwordResetToken()) {
+          <h2>{{ language() === 'pl' ? 'Brak tokenu resetu' : 'Missing reset token' }}</h2>
+          <p class="muted">{{ language() === 'pl' ? 'Otwórz link z wiadomości e-mail albo poproś o nowy.' : 'Open the link from your email or request a new one.' }}</p>
+          <button class="primary-button" (click)="router.navigateByUrl('/forgot-password')">{{ language() === 'pl' ? 'Poproś o nowy link' : 'Request a new link' }}</button>
+        } @else if (passwordResetStatus() === 'success') {
+          <h2>{{ language() === 'pl' ? 'Hasło zmienione' : 'Password updated' }}</h2>
+          <p class="muted">{{ language() === 'pl' ? 'Możesz teraz zalogować się nowym hasłem.' : 'You can now sign in with your new password.' }}</p>
+          <button class="primary-button" (click)="backToLogin()">{{ language() === 'pl' ? 'Przejdź do logowania' : 'Go to sign in' }}</button>
+        } @else if (passwordResetCompletePage()) {
+          <h2>{{ language() === 'pl' ? 'Ustaw nowe hasło' : 'Set a new password' }}</h2>
+          <p class="muted">{{ language() === 'pl' ? 'Wybierz hasło o długości co najmniej 8 znaków.' : 'Choose a password at least 8 characters long.' }}</p>
+          @if (passwordResetError()) { <p class="form-error" role="alert">{{ passwordResetError() }}</p> }
+          <form (ngSubmit)="submitPasswordReset()">
+            <label>{{ language() === 'pl' ? 'Nowe hasło' : 'New password' }}<input [(ngModel)]="newPassword" name="newPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+            <label>{{ language() === 'pl' ? 'Powtórz nowe hasło' : 'Confirm new password' }}<input [(ngModel)]="confirmNewPassword" name="confirmNewPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+            <button class="primary-button" [disabled]="passwordResetStatus() === 'loading'">{{ passwordResetStatus() === 'loading' ? t('wait') : (language() === 'pl' ? 'Zapisz nowe hasło' : 'Save new password') }} <b>→</b></button>
+          </form>
+        } @else if (passwordResetStatus() === 'sent') {
+          <h2>{{ language() === 'pl' ? 'Sprawdź swoją pocztę' : 'Check your email' }}</h2>
+          <p class="muted">{{ language() === 'pl' ? 'Jeśli konto z tym adresem istnieje, wysłaliśmy wiadomość z instrukcją zmiany hasła. Sprawdź też folder spam.' : 'If an account exists for this address, we have sent password reset instructions. Check your spam folder too.' }}</p>
+          <p class="muted">{{ passwordResetEmail }}</p>
+          <button class="primary-button" (click)="backToLogin()">{{ language() === 'pl' ? 'Wróć do logowania' : 'Back to sign in' }}</button>
+        } @else {
+          <h2>{{ language() === 'pl' ? 'Nie pamiętasz hasła?' : 'Forgot your password?' }}</h2>
+          <p class="muted">{{ language() === 'pl' ? 'Podaj adres e-mail powiązany z kontem. Wyślemy instrukcję ustawienia nowego hasła.' : 'Enter the email address linked to your account. We will send instructions to set a new password.' }}</p>
+          @if (passwordResetError()) { <p class="form-error" role="alert">{{ passwordResetError() }}</p> }
+          <form (ngSubmit)="requestPasswordReset()">
+            <label>{{ t('email') }}<input [(ngModel)]="passwordResetEmail" name="passwordResetEmail" type="email" autocomplete="email" required></label>
+            <button class="primary-button" [disabled]="passwordResetStatus() === 'loading'">{{ passwordResetStatus() === 'loading' ? t('wait') : (language() === 'pl' ? 'Wyślij link resetujący' : 'Send reset link') }} <b>→</b></button>
+          </form>
+          <p class="switch-auth"><button (click)="backToLogin()">{{ language() === 'pl' ? 'Wróć do logowania' : 'Back to sign in' }}</button></p>
+        }
+      </div>
+    </section>
+  </main>
 } @else if (!api.token()) {
   <main class="auth-layout">
     <section class="auth-brand">
@@ -69,6 +117,7 @@
           }
           @if (authMode() === 'login') {
             <label>{{ t('email') }}<input [(ngModel)]="login.email" name="loginEmail" type="email" required></label><label>{{ t('password') }}<input [(ngModel)]="login.password" name="loginPassword" type="password" minlength="6" required></label>
+            <p class="switch-auth forgot-link"><button type="button" (click)="router.navigateByUrl('/forgot-password')">{{ language() === 'pl' ? 'Nie pamiętasz hasła?' : 'Forgot your password?' }}</button></p>
           } @else {
             <label>{{ t('email') }}<input [(ngModel)]="registration.email" name="registrationEmail" type="email" required></label><label>{{ t('password') }}<input [(ngModel)]="registration.password" name="registrationPassword" type="password" minlength="6" required></label>
           }

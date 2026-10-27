@@ -36,7 +36,7 @@ const editableStatisticFields = [
 })
 export class AppComponent {
   readonly api = inject(ApiService);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
   readonly language = signal<Language>((localStorage.getItem('volleyflow.language') as Language) || 'pl');
   readonly page = signal<Page>('overview');
   readonly clubs = signal<Club[]>([]);
@@ -51,6 +51,14 @@ export class AppComponent {
   readonly authMode = signal<'login' | 'register'>('login');
   readonly registrationEmail = signal('');
   readonly activationPage = signal(false);
+  readonly passwordResetPage = signal(false);
+  readonly passwordResetCompletePage = signal(false);
+  readonly passwordResetStatus = signal<'idle' | 'loading' | 'sent' | 'success' | 'error'>('idle');
+  readonly passwordResetError = signal('');
+  passwordResetEmail = '';
+  readonly passwordResetToken = signal('');
+  newPassword = '';
+  confirmNewPassword = '';
   readonly activationStatus = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly activationError = signal('');
   activationLink = '';
@@ -125,11 +133,11 @@ export class AppComponent {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.restoreActivationRoute();
-        if (!this.activationPage()) this.restoreRoute();
+        if (!this.activationPage() && !this.passwordResetPage()) this.restoreRoute();
       }
     });
     this.restoreActivationRoute();
-    if (this.api.token() && !window.location.pathname.startsWith('/activate')) this.loadClubs();
+    if (this.api.token() && !window.location.pathname.startsWith('/activate') && !window.location.pathname.startsWith('/forgot-password') && !window.location.pathname.startsWith('/reset-password')) this.loadClubs();
   }
 
   submitAuth(): void {
@@ -164,6 +172,50 @@ export class AppComponent {
   }
 
   openActivation(): void { void this.router.navigateByUrl('/activate'); }
+
+  requestPasswordReset(): void {
+    if (this.passwordResetStatus() === 'loading') return;
+    this.passwordResetError.set('');
+    this.passwordResetStatus.set('loading');
+    this.api.requestPasswordReset(this.passwordResetEmail.trim()).subscribe({
+      next: () => this.passwordResetStatus.set('sent'),
+      error: (error: HttpErrorResponse) => {
+        this.passwordResetStatus.set('error');
+        this.passwordResetError.set(error.status === 0 || error.status >= 500
+          ? (this.language() === 'pl' ? 'Nie udało się połączyć z serwerem. Spróbuj ponownie.' : 'Could not reach the server. Please try again.')
+          : (this.language() === 'pl' ? 'Nie udało się wysłać prośby. Spróbuj ponownie.' : 'Could not submit your request. Please try again.'));
+      }
+    });
+  }
+
+  submitPasswordReset(): void {
+    if (this.passwordResetStatus() === 'loading') return;
+    if (this.newPassword.length < 8) {
+      this.passwordResetError.set(this.language() === 'pl' ? 'Hasło musi mieć co najmniej 8 znaków.' : 'Password must be at least 8 characters long.');
+      return;
+    }
+    if (this.newPassword !== this.confirmNewPassword) {
+      this.passwordResetError.set(this.language() === 'pl' ? 'Podane hasła nie są takie same.' : 'The passwords do not match.');
+      return;
+    }
+    this.passwordResetError.set('');
+    this.passwordResetStatus.set('loading');
+    this.api.resetPassword(this.passwordResetToken(), this.newPassword).subscribe({
+      next: () => this.passwordResetStatus.set('success'),
+      error: (error: HttpErrorResponse) => {
+        this.passwordResetStatus.set('error');
+        this.passwordResetError.set(error.status === 0 || error.status >= 500
+          ? (this.language() === 'pl' ? 'Serwer jest niedostępny. Spróbuj ponownie później.' : 'The server is unavailable. Please try again later.')
+          : (this.language() === 'pl' ? 'Link jest nieprawidłowy lub wygasł. Poproś o nowy.' : 'This link is invalid or expired. Request a new one.'));
+      }
+    });
+  }
+
+  backToLogin(): void {
+    this.passwordResetStatus.set('idle');
+    this.passwordResetError.set('');
+    void this.router.navigateByUrl('/');
+  }
 
   returnToLogin(): void {
     this.authMode.set('login');
@@ -221,6 +273,18 @@ export class AppComponent {
     const route = this.router.parseUrl(this.router.url);
     const path = route.root.children['primary']?.segments.map((segment) => segment.path).join('/');
     const activating = path === 'activate';
+    const resetting = path === 'reset-password';
+    this.passwordResetPage.set(path === 'forgot-password' || resetting);
+    this.passwordResetCompletePage.set(resetting);
+    if (resetting) {
+      this.passwordResetToken.set(route.queryParams['token'] || '');
+      this.passwordResetStatus.set('idle');
+      this.passwordResetError.set('');
+    } else if (path !== 'forgot-password') {
+      this.passwordResetToken.set('');
+      this.passwordResetStatus.set('idle');
+      this.passwordResetError.set('');
+    }
     this.activationPage.set(activating);
     if (!activating) {
       this.activationStatus.set('idle');

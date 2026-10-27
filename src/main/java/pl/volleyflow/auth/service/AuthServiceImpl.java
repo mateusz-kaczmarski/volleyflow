@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.volleyflow.auth.dto.AuthResponse;
 import pl.volleyflow.auth.event.AccountActivatedEvent;
+import pl.volleyflow.auth.event.AccountRestartPasswordEvent;
 import pl.volleyflow.auth.event.UserRegisteredEvent;
 import pl.volleyflow.auth.model.UserLoginRequest;
 import pl.volleyflow.auth.model.exception.InvalidCredentialsException;
@@ -26,9 +27,8 @@ import pl.volleyflow.user.model.UserNotFoundException;
 import pl.volleyflow.user.model.UserRegisterRequest;
 import pl.volleyflow.user.service.UserAccountService;
 
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.UUID;
@@ -40,6 +40,7 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
     private static final String USER_ACTIVE_KEY = "activation:user:";
+    private static final String USER_RESTART_PASSWORD_KEY = "restartPassword:user:";
 
     private final UserAccountService userAccountService;
     private final PersonProfileService personProfileService;
@@ -134,6 +135,33 @@ public class AuthServiceImpl implements AuthService {
             return AuthResponse.activeSuccessfully(null, userExternalId);
         }
         throw new InvalidCredentialsException("Account is not pending activation");
+    }
+
+    @Override
+    public AuthResponse restartPassword(String email) {
+        UserAccount userAccount = userAccountService.findByEmail(email).orElse(null);
+
+        if (userAccount == null) {
+            return AuthResponse.withMessage("Send email for restart password");
+        }
+
+
+        String token = UUID.randomUUID().toString();
+
+        byte[] hashedBytes = TokenHashUtils.generateHashForToken(token);
+        String tokenHash = HexFormat.of().formatHex(hashedBytes);
+
+        redisTemplate.opsForValue().set(
+                USER_RESTART_PASSWORD_KEY + userAccount.getExternalId(),
+                tokenHash,
+                Duration.ofMinutes(15));
+
+        applicationEventPublisher.publishEvent(new AccountRestartPasswordEvent(
+                userAccount.getExternalId(),
+                email,
+                token));
+
+        return AuthResponse.withMessage("Send email for restart password");
     }
 
     private UserAccountRequest getUserAccountRequest(UserRegisterRequest request) {

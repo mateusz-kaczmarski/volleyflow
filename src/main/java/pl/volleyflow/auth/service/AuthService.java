@@ -14,4 +14,6 @@ public interface AuthService {
 
     AuthResponse active(UUID userExternalId, String token);
 
+    AuthResponse restartPassword(String email);
+
 }

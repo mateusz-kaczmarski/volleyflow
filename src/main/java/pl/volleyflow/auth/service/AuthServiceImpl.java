@@ -11,6 +11,7 @@ import pl.volleyflow.auth.dto.AuthResponse;
 import pl.volleyflow.auth.event.AccountActivatedEvent;
 import pl.volleyflow.auth.event.AccountRestartPasswordEvent;
 import pl.volleyflow.auth.event.UserRegisteredEvent;
+import pl.volleyflow.auth.model.ConfirmPasswordRequest;
 import pl.volleyflow.auth.model.UserLoginRequest;
 import pl.volleyflow.auth.model.exception.InvalidCredentialsException;
 import pl.volleyflow.common.StringNormalizer;
@@ -40,7 +41,9 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
     private static final String USER_ACTIVE_KEY = "activation:user:";
-    private static final String USER_RESTART_PASSWORD_KEY = "restartPassword:user:";
+    private static final String PASSWORD_RESET_TOKEN_KEY_PREFIX = "restartPassword:token:";
+    private static final String PASSWORD_RESET_USER_KEY_PREFIX = "restartPassword:user:";
+    private static final Duration PASSWORD_RESET_EXPIRATION = Duration.ofMinutes(15);
 
     private final UserAccountService userAccountService;
     private final PersonProfileService personProfileService;
@@ -139,29 +142,69 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse restartPassword(String email) {
-        UserAccount userAccount = userAccountService.findByEmail(email).orElse(null);
+        AuthResponse response = AuthResponse.withMessage("Send email for restart password");
+        UserAccount userAccount = userAccountService.findByEmail(StringNormalizer.normalizeEmail(email)).orElse(null);
 
         if (userAccount == null) {
-            return AuthResponse.withMessage("Send email for restart password");
+            return response;
         }
 
-
         String token = UUID.randomUUID().toString();
+        String tokenHash = hashToken(token);
+        String userKey = PASSWORD_RESET_USER_KEY_PREFIX + userAccount.getExternalId();
+        String previousTokenHash = redisTemplate.opsForValue().get(userKey);
 
-        byte[] hashedBytes = TokenHashUtils.generateHashForToken(token);
-        String tokenHash = HexFormat.of().formatHex(hashedBytes);
+        // The user key tracks the latest link, so an older link cannot confirm a reset.
+        redisTemplate.opsForValue().set(userKey, tokenHash, PASSWORD_RESET_EXPIRATION);
+        if (previousTokenHash != null) {
+            redisTemplate.delete(PASSWORD_RESET_TOKEN_KEY_PREFIX + previousTokenHash);
+        }
 
         redisTemplate.opsForValue().set(
-                USER_RESTART_PASSWORD_KEY + userAccount.getExternalId(),
-                tokenHash,
-                Duration.ofMinutes(15));
+                PASSWORD_RESET_TOKEN_KEY_PREFIX + tokenHash,
+                userAccount.getExternalId().toString(),
+                PASSWORD_RESET_EXPIRATION);
 
         applicationEventPublisher.publishEvent(new AccountRestartPasswordEvent(
                 userAccount.getExternalId(),
-                email,
+                userAccount.getEmail(),
                 token));
 
-        return AuthResponse.withMessage("Send email for restart password");
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public void confirmRestartPassword(ConfirmPasswordRequest request) {
+        String tokenHash = hashToken(request.token());
+        String key = PASSWORD_RESET_TOKEN_KEY_PREFIX + tokenHash;
+
+        String externalId = redisTemplate.opsForValue().get(key);
+        if (externalId == null) {
+            throw new InvalidCredentialsException("Token is invalid or expired");
+        }
+
+        UUID userExternalId = UUID.fromString(externalId);
+        String latestTokenHash = redisTemplate.opsForValue().get(PASSWORD_RESET_USER_KEY_PREFIX + userExternalId);
+        if (!tokenHash.equals(latestTokenHash)) {
+            throw new InvalidCredentialsException("Token is invalid or expired");
+        }
+
+        UserAccount account = userAccountService.findByExternalId(userExternalId)
+                .orElseThrow(() -> new InvalidCredentialsException("Token is invalid or expired"));
+
+        String encodedPassword = passwordEncoder.encode(request.newPassword());
+        if (!externalId.equals(redisTemplate.opsForValue().getAndDelete(key))) {
+            throw new InvalidCredentialsException("Token is invalid or expired");
+        }
+        if (!tokenHash.equals(redisTemplate.opsForValue().get(PASSWORD_RESET_USER_KEY_PREFIX + userExternalId))) {
+            throw new InvalidCredentialsException("Token is invalid or expired");
+        }
+        account.setPasswordHash(encodedPassword);
+    }
+
+    private String hashToken(String token) {
+        return HexFormat.of().formatHex(TokenHashUtils.generateHashForToken(token));
     }
 
     private UserAccountRequest getUserAccountRequest(UserRegisterRequest request) {

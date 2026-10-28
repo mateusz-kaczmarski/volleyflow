@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.volleyflow.auth.dto.AuthResponse;
+import pl.volleyflow.auth.model.ConfirmPasswordRequest;
 import pl.volleyflow.auth.model.UserLoginRequest;
 import pl.volleyflow.auth.model.UserRestartPasswordRequest;
 import pl.volleyflow.auth.service.AuthService;
@@ -45,6 +46,12 @@ public class AuthController {
     @PostMapping("/password-reset")
     public ResponseEntity<AuthResponse> resetPassword(@RequestBody @Valid UserRestartPasswordRequest request) {
         return ResponseEntity.ok(authService.restartPassword(request.email()));
+    }
+
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<Void> confirmPassword(@RequestBody @Valid ConfirmPasswordRequest confirmPasswordRequest) {
+        authService.confirmRestartPassword(confirmPasswordRequest);
+        return ResponseEntity.ok().build();
     }
 
 }

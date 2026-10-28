@@ -9,7 +9,7 @@ import pl.volleyflow.auth.event.AccountRestartPasswordRequested;
 @Component
 @RequiredArgsConstructor
 @Log4j2
-public class AccountRestartPasswordListener {
+public class PasswordResetEmailKafkaListener {
 
     private final EmailService emailService;
 

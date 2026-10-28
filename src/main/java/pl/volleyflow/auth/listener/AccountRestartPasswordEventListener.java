@@ -3,14 +3,14 @@ package pl.volleyflow.auth.listener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import pl.volleyflow.auth.event.AccountRestartPasswordEvent;
 import pl.volleyflow.auth.service.AccountRestartPasswordService;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Log4j2
-public class AccountRestartPasswordListener {
+public class AccountRestartPasswordEventListener {
 
     private final AccountRestartPasswordService accountRestartPasswordService;
 

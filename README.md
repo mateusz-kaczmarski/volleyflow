@@ -1,27 +1,63 @@
 # VolleyFlow
 
-VolleyFlow pomaga prowadzić amatorski klub siatkarski: zarządzać składem,
-planować mecze i zapisywać wyniki oraz statystyki setów. Repozytorium zawiera
-backend REST w Javie i demonstracyjny frontend Angular, dzięki któremu można
-przejść przez aplikację bez ręcznego wysyłania żądań do API.
+VolleyFlow to aplikacja do prowadzenia amatorskiego klubu siatkarskiego: od składu
+i terminarza po wyniki setów oraz statystyki zawodników. Repozytorium zawiera API
+w Spring Boot oraz frontend Angular, dzięki któremu można obejrzeć aplikację bez
+ręcznego wysyłania żądań.
 
-Projekt rozwijam przede wszystkim po stronie backendu: modeluję procesy i dane,
-implementuję API oraz integracje Spring Boot, PostgreSQL, Redis i Kafka. Frontend
-powstał i jest rozwijany przy wsparciu narzędzi AI; używam go do demonstracji
-i testowania funkcji aplikacji.
+**Mój główny obszar pracy to backend:** model domenowy, API, uprawnienia,
+przechowywanie danych i integracje. Frontend służy jako interfejs demonstracyjny;
+powstał i jest rozwijany przy wsparciu narzędzi AI. Dane przykładowe są fikcyjne.
 
-## Funkcje
+## Demo w kilka minut
 
-- Rejestracja z aktywacją konta przez e-mail oraz logowanie z JWT.
-- Zarządzanie kontem i profilem użytkownika.
-- Tworzenie klubów oraz zarządzanie ich członkami.
-- Role członków klubu: `OWNER`, `TRAINER`, `PLAYER`, `STATISTIC`.
-- Tworzenie i aktualizowanie meczów, przypisywanie klubów i sezonów.
-- Rejestrowanie wyników setów, nagrań wideo, MVP i statystyk zawodników.
-- Pobieranie statystyk meczu, setu i kariery zawodnika.
-- Walidacja żądań i ujednolicone odpowiedzi błędów.
-- Asynchroniczne zlecanie wiadomości aktywacyjnych przez Kafka; Redis przechowuje
-  czasowe hashe tokenów aktywacyjnych.
+Potrzebujesz **Java 17**, **Dockera z Docker Compose** oraz **Node.js 20.19+
+(lub 22.12+) z npm**. W katalogu głównym repozytorium uruchom:
+
+```bash
+docker compose up -d --wait
+SPRING_CONFIG_LOCATION=classpath:/ ./mvnw spring-boot:run
+```
+
+W **drugim terminalu**:
+
+```bash
+cd frontend
+npm ci
+npm start
+```
+
+Otwórz <http://localhost:4200> i zaloguj się:
+
+```text
+e-mail: aurora.owner@example.com
+hasło:  demo1234
+```
+
+**Co obejrzeć po zalogowaniu:** Aurora Volley i jej skład, terminarz z trzema
+zakończonymi meczami, szczegóły setów, statystyki zawodników i centrum statystyk.
+Możesz też utworzyć własne konto i przejść aktywację przez lokalny Mailpit
+(<http://localhost:8025>). Demo działa **lokalnie**; repozytorium nie udostępnia
+publicznej instancji aplikacji.
+
+> Konto demo ma stałe hasło i uprawnienia właściciela klubu. Jest przeznaczone
+> wyłącznie do lokalnego środowiska demonstracyjnego, nie do publicznego wdrożenia
+> z udostępnioną bazą danych. Domyślny sekret JWT i hasła infrastruktury są
+> ustawieniami lokalnymi — przy wdrożeniu należy podać własne sekrety.
+
+## Co pokazuje projekt
+
+- **Procesy konta:** rejestracja, aktywacja przez e-mail, logowanie JWT oraz
+  reset hasła tokenem ważnym przez 15 minut.
+- **Domena klubu:** profile, członkostwa z rolami, mecze, sety, MVP oraz
+  statystyki setów i kariery zawodnika.
+- **Integracje:** PostgreSQL i migracje Flyway dla danych trwałych, Redis dla
+  krótkotrwałych tokenów, Kafka do zlecania wysyłki e-maili, Mailpit do
+  lokalnego podglądu wiadomości.
+- **Bezpieczeństwo:** autoryzacja operacji na zasobach klubu, walidacja żądań
+  i wspólny format błędów API.
+
+Szczegółowe instrukcje uruchomienia, endpointy i informacje o testach są poniżej.
 
 ## Technologie
 
@@ -35,20 +71,9 @@ i testowania funkcji aplikacji.
 
 ## Uruchomienie lokalne
 
-Wymagane: Java 17, Docker z Docker Compose oraz Node.js 20.19+ (lub 22.12+)
-z npm.
-
-Uruchom lokalne usługi infrastruktury:
-
-```bash
-docker compose up -d --wait
-```
-
-Uruchom aplikację z fikcyjnymi danymi demonstracyjnymi:
-
-```bash
-SPRING_CONFIG_LOCATION=classpath:/ ./mvnw spring-boot:run
-```
+Na Linux/macOS wykonaj kroki z sekcji „Demo w kilka minut”. Flyway załaduje
+dane demonstracyjne podczas startu backendu. Backend będzie dostępny pod adresem
+<http://localhost:8080>, a frontend pod <http://localhost:4200>.
 
 `SPRING_CONFIG_LOCATION=classpath:/` wymusza użycie konfiguracji z zasobów
 aplikacji. Na Windows PowerShell:
@@ -58,31 +83,13 @@ $env:SPRING_CONFIG_LOCATION='classpath:/'
 ./mvnw.cmd spring-boot:run
 ```
 
-Aplikacja jest dostępna pod adresem `http://localhost:8080`.
+Dev server przekazuje żądania `/api` i `/internal` do backendu na porcie 8080.
+Zależności, cache Angulara i wynik builda są tworzone lokalnie — nie są
+przechowywane w Git.
 
-W osobnym terminalu uruchom frontend:
+### Rejestracja i aktywacja lokalnie
 
-```bash
-cd frontend
-npm ci
-npm start
-```
-
-Interfejs będzie dostępny pod adresem <http://localhost:4200>. Dev server
-przekazuje żądania `/api` i `/internal` do backendu na porcie 8080. Zależności,
-cache Angulara i wynik builda są tworzone lokalnie — nie są przechowywane w Git.
-
-### Pierwsze uruchomienie i konto demonstracyjne
-
-Otwórz <http://localhost:4200>. Do szybkiego obejrzenia aplikacji użyj konta
-demonstracyjnego:
-
-```text
-e-mail: aurora.owner@example.com
-hasło:  demo1234
-```
-
-Możesz też sprawdzić pełny proces rejestracji:
+Po uruchomieniu aplikacji możesz sprawdzić pełny proces rejestracji:
 
 1. Załóż konto w formularzu rejestracji.
 2. Otwórz <http://localhost:8025> i znajdź wiadomość aktywacyjną.
@@ -130,15 +137,12 @@ Flyway domyślnie ładuje przy starcie aplikacji fikcyjne dane demonstracyjne:
 - 3 zakończone mecze, 12 setów i statystyki zawodników;
 - wybrane MVP oraz 2 zaplanowane mecze.
 
-Konto demonstracyjne:
-
-```text
-email: aurora.owner@example.com
-hasło: demo1234
-```
+Konto i hasło demonstracyjne są podane na początku README, w sekcji „Demo w kilka minut”.
 
 Fixture jest idempotentny w tym sensie, że ponowne uruchomienie nie nadpisuje
-istniejących ani lokalnie zmodyfikowanych danych Aurora.
+istniejących ani lokalnie zmodyfikowanych danych Aurora. Dane PostgreSQL są
+przechowywane w wolumenie Compose: jeśli zmienisz hasło konta demo albo dane
+klubu, ponowny start aplikacji nie przywróci pierwotnego stanu.
 
 ## API
 
@@ -147,8 +151,8 @@ Dokumentacja OpenAPI i interaktywny Swagger UI są dostępne po uruchomieniu:
 - Swagger UI: <http://localhost:8080/swagger-ui/index.html>
 - OpenAPI JSON: <http://localhost:8080/v3/api-docs>
 
-Wszystkie endpointy poza rejestracją, logowaniem i dokumentacją wymagają tokenu
-JWT. Przekaż go w nagłówku:
+Publiczne są endpointy `/api/auth/**` (w tym aktywacja i reset hasła) oraz
+dokumentacja OpenAPI. Pozostałe endpointy wymagają JWT. Przekaż go w nagłówku:
 
 ```http
 Authorization: Bearer <jwt-token>
@@ -161,10 +165,14 @@ Authorization: Bearer <jwt-token>
 | `POST` | `/api/auth/register` | Tworzy konto oczekujące na aktywację i jego profil; nie zwraca JWT. |
 | `POST` | `/api/auth/login` | Uwierzytelnia użytkownika i zwraca token JWT. |
 | `POST` | `/api/auth/activate?userExternalId={uuid}&token={token}` | Weryfikuje link aktywacyjny i aktywuje konto. |
+| `POST` | `/api/auth/password-reset` | Przyjmuje `{ "email": "..." }`; odpowiada tak samo niezależnie od istnienia konta. |
+| `POST` | `/api/auth/password-reset/confirm` | Przyjmuje `{ "token": "...", "newPassword": "..." }`; ustawia nowe hasło bez JWT. |
 
 Nowe konto otrzymuje status oczekujący. Wysyłka wiadomości aktywacyjnej jest
 zlecana asynchronicznie przez Kafkę, a hash tokenu z 15-minutowym TTL jest przechowywany
 w Redisie. JWT jest wydawany podczas logowania po aktywacji.
+Link resetujący jest ważny przez 15 minut; nowa prośba unieważnia poprzedni link
+dla danego konta. Po zmianie hasła użytkownik loguje się ponownie.
 
 Przykład rejestracji:
 
@@ -245,16 +253,20 @@ Przykładowe żądanie utworzenia meczu:
   "createdByClubExternalId": "2342f555-018b-8171-eb54-e18d1780d0d8",
   "homeClubExternalId": "2342f555-018b-8171-eb54-e18d1780d0d8",
   "awayClubExternalId": "85fac36f-58a8-6d90-e2de-01ce9ca9c514",
-  "scheduledAt": "2026-12-12T16:00:00Z",
+  "scheduledAt": "2030-12-12T16:00:00Z",
   "matchLocation": {
     "city": "Miasto Demo",
     "zipCode": "00-001",
     "street": "Sportowa",
     "buildingNumber": "1"
   },
-  "season": 2026
+  "season": 2030
 }
 ```
+
+UUID-y wskazują kluby Aurora Volley i Orion Volley z danych demo. Przed wysłaniem
+żądania ustaw `scheduledAt` na datę przyszłą (pole wymaga daty bieżącej lub
+późniejszej).
 
 ## Błędy API
 

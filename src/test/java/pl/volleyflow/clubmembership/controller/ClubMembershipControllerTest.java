@@ -13,6 +13,7 @@ import pl.volleyflow.clubmembership.model.ClubMembershipDto;
 import pl.volleyflow.clubmembership.model.ClubMembershipRole;
 import pl.volleyflow.clubmembership.model.ClubMembershipUpdateRequest;
 import pl.volleyflow.clubmembership.model.MemberPosition;
+import pl.volleyflow.clubmembership.exceptions.ClubMembershipAccessDeniedException;
 import pl.volleyflow.clubmembership.service.ClubMembershipService;
 import pl.volleyflow.config.GlobalErrorHandler;
 import pl.volleyflow.security.JwtAuthenticationFilter;
@@ -143,6 +144,18 @@ class ClubMembershipControllerTest {
                 .andExpect(jsonPath("$[0].active").value(true));
 
         verify(clubMembershipService).getPlayersByClub(eq(uuid), eq("owner@example.pl"), eq(true));
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenUserIsNotClubMember() throws Exception {
+        UUID clubExternalId = UUID.randomUUID();
+        when(clubMembershipService.getPlayersByClub(clubExternalId, "owner@example.pl", null))
+                .thenThrow(new ClubMembershipAccessDeniedException("No access to club"));
+
+        mockMvc.perform(get("/api/memberships/{clubExternalId}/players", clubExternalId)
+                        .principal(() -> "owner@example.pl"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.httpStatus").value(403));
     }
 
     @Test

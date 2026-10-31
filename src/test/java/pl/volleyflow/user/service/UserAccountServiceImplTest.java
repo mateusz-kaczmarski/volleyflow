@@ -174,6 +174,25 @@ class UserAccountServiceImplTest {
     }
 
     @Test
+    void shouldFindUserByExternalId() {
+        UserAccount userAccount = createUserAccount();
+        when(userAccountRepository.findByExternalId(EXTERNAL_ID)).thenReturn(Optional.of(userAccount));
+
+        assertThat(userAccountService.findByExternalId(EXTERNAL_ID)).contains(userAccount);
+
+        verify(userAccountRepository).findByExternalId(EXTERNAL_ID);
+    }
+
+    @Test
+    void shouldReturnEmptyWhenExternalIdDoesNotExist() {
+        when(userAccountRepository.findByExternalId(EXTERNAL_ID)).thenReturn(Optional.empty());
+
+        assertThat(userAccountService.findByExternalId(EXTERNAL_ID)).isEmpty();
+
+        verify(userAccountRepository).findByExternalId(EXTERNAL_ID);
+    }
+
+    @Test
     void shouldChangePasswordWhenOldPasswordMatches() {
         UserAccount userAccount = createUserAccount();
         UserChangePasswordRequest request = createChangePasswordRequest();
@@ -295,6 +314,19 @@ class UserAccountServiceImplTest {
 
         assertThat(result).isEqualTo(createUserAccountDto(EMAIL, null));
         assertThat(userAccount.getPhone()).isNull();
+        verify(userAccountRepository, never()).existsByEmailAndIdNot(any(), any());
+        verify(userAccountRepository, never()).existsByPhoneAndIdNot(any(), any());
+    }
+
+    @Test
+    void shouldKeepExistingValuesWhenUpdateFieldsAreNull() {
+        UserAccount userAccount = createUserAccount();
+        when(userAccountRepository.findByEmail(EMAIL)).thenReturn(Optional.of(userAccount));
+
+        UserAccountDto result = userAccountService.updateUserAccount(
+                new UserAccountUpdateRequest(null, null), EMAIL);
+
+        assertThat(result).isEqualTo(createUserAccountDto());
         verify(userAccountRepository, never()).existsByEmailAndIdNot(any(), any());
         verify(userAccountRepository, never()).existsByPhoneAndIdNot(any(), any());
     }
